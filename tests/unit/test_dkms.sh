@@ -176,7 +176,7 @@ test_prepare_cold_cache_message() {
   assert_contains "$err" "fetch-source.sh 6.17.0-1-nvidia"
 }
 
-test_prepare_refuses_upstream_source() {
+test_prepare_skips_already_quirked_source() {
   local parts build_dir state_dir stub_dir err rc=0
   parts="$(__build_dir_env)"
   build_dir="${parts%%|*}"
@@ -192,8 +192,11 @@ test_prepare_refuses_upstream_source() {
         bash prepare.sh 6.17.0-1-nvidia
   ) 2>"$build_dir/.stderr" || rc=$?
   err="$(cat "$build_dir/.stderr")"
-  assert_eq "1" "$rc"
-  assert_contains "$err" "refusing"
+  assert_eq "0" "$rc"
+  assert_contains "$err" "already contains"
+  assert_eq "$(cat "$state_dir/src/6.17.0-1-nvidia/cdc_ncm.c")" "$(cat "$build_dir/cdc_ncm.c")"
+  assert_not_contains "$(cat "$build_dir/cdc_ncm.c")" "mac-gx10-direct-link"
+  assert_eq "obj-m := cdc_ncm.o" "$(cat "$build_dir/Kbuild")"
 }
 
 run_tests

@@ -25,8 +25,8 @@ gen_rc=0
 ./gen-quirk-patch.sh "$cache_dir/cdc_ncm.c" ./pids.conf >./cdc_ncm.c || gen_rc=$?
 
 if [ "$gen_rc" -eq 3 ]; then
-  log_error "source for $kver already contains the quirk; refusing to build override"
-  exit 1
+  log_warn "source for $kver already contains the quirk; skipping patch, building unmodified source"
+  cp "$cache_dir/cdc_ncm.c" ./cdc_ncm.c
 elif [ "$gen_rc" -ne 0 ]; then
   exit "$gen_rc"
 fi
