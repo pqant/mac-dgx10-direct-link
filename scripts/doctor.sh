@@ -106,7 +106,10 @@ fi
 if [ -n "$iface_name" ] && command -v ip >/dev/null 2>&1; then
   addr_out="$(ip -o addr show dev "$iface_name" 2>/dev/null || true)"
   gx10_ip_nomask="${GX10_IP%%/*}"
-  if grep -q "$gx10_ip_nomask" <<<"$addr_out"; then
+  # M8: grep -F for a literal match; without it, the dots in an IPv4
+  # address are regex metacharacters ('.' matches any char), so an
+  # unrelated address with the same shape could false-PASS.
+  if grep -qF "$gx10_ip_nomask" <<<"$addr_out"; then
     pass "$iface_name has $GX10_IP"
   else
     fail "$iface_name has $GX10_IP"
@@ -114,7 +117,7 @@ if [ -n "$iface_name" ] && command -v ip >/dev/null 2>&1; then
 
   mac_ip_nomask="${MAC_IP%%/*}"
   route_out="$(ip route get "$mac_ip_nomask" 2>/dev/null || true)"
-  if grep -q "dev $iface_name" <<<"$route_out"; then
+  if grep -qF "dev $iface_name" <<<"$route_out"; then
     pass "route to $mac_ip_nomask via $iface_name"
   else
     fail "route to $mac_ip_nomask via $iface_name"
@@ -129,11 +132,22 @@ quirks=""
 if [ -r "$MGDL_USBCORE_QUIRKS" ]; then
   quirks="$(cat "$MGDL_USBCORE_QUIRKS")"
 fi
-if grep -qi '05ac:1905:k' <<<"$quirks"; then
-  pass "LPM quirk present"
-else
-  fail "LPM quirk present"
+# M8: check every PID configured in config/pids.conf, not just 1905.
+pids_for_lpm=""
+if [ -r "$pids_file" ]; then
+  pids_for_lpm="$(read_pids "$pids_file" 2>/dev/null || true)"
 fi
+if [ -z "$pids_for_lpm" ]; then
+  pids_for_lpm="1905"
+fi
+while IFS= read -r pid; do
+  [ -z "$pid" ] && continue
+  if grep -qiF "05ac:$pid:k" <<<"$quirks"; then
+    pass "LPM quirk present for 05ac:$pid"
+  else
+    fail "LPM quirk present for 05ac:$pid"
+  fi
+done <<<"$pids_for_lpm"
 
 # -- Secure Boot state (INFO) -------------------------------------------------
 if command -v mokutil >/dev/null 2>&1; then

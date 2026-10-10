@@ -77,7 +77,9 @@ for k in "${kernels[@]}"; do
 
   dkms_installed=false
   if command -v dkms >/dev/null 2>&1; then
-    if dkms status 2>/dev/null | grep -qi "$k.*installed"; then
+    # I6: scope the query to our own module/version/kernel so an unrelated
+    # DKMS module mentioning this kernel can't false-PASS the check.
+    if dkms status -m apple-cdc-ncm -v 1.0.0 -k "$k" 2>/dev/null | grep -q ': installed'; then
       dkms_installed=true
     fi
   fi
@@ -105,10 +107,26 @@ cmdline=""
 if [ -r "$MGDL_PROC_CMDLINE" ]; then
   cmdline="$(cat "$MGDL_PROC_CMDLINE")"
 fi
-if [[ "$cmdline" == *"usbcore.quirks=05ac:1905:k"* ]]; then
-  pass "cmdline contains usbcore.quirks=05ac:1905:k"
-else
-  fail "cmdline contains usbcore.quirks=05ac:1905:k"
+quirks_value=""
+if [[ "$cmdline" =~ usbcore\.quirks=([^[:space:]]+) ]]; then
+  quirks_value="${BASH_REMATCH[1]}"
 fi
+# M8: check every PID configured in config/pids.conf, not just 1905.
+pids_conf="$script_dir/../config/pids.conf"
+pids_for_cmdline=""
+if [ -r "$pids_conf" ]; then
+  pids_for_cmdline="$(read_pids "$pids_conf" 2>/dev/null || true)"
+fi
+if [ -z "$pids_for_cmdline" ]; then
+  pids_for_cmdline="1905"
+fi
+while IFS= read -r pid; do
+  [ -z "$pid" ] && continue
+  if [[ ",$quirks_value," == *",05ac:$pid:k,"* ]]; then
+    pass "cmdline contains usbcore.quirks=05ac:$pid:k"
+  else
+    fail "cmdline contains usbcore.quirks=05ac:$pid:k"
+  fi
+done <<<"$pids_for_cmdline"
 
 exit "$exit_code"
