@@ -13,5 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install shellcheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Fetch real-source test fixtures
+        run: bash tests/fixtures/get-sources.sh
       - name: Lint and test
         run: make lint test

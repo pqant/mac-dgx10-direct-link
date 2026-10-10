@@ -1,0 +1,33 @@
+From a5148bc2fa27092862ac4b9e7b5c8340d60cff34 Mon Sep 17 00:00:00 2001
+From: Alex Cheema <alex@exolabs.net>
+Date: Wed, 29 Apr 2026 18:57:39 +0100
+Subject: [PATCH] net: usb: cdc_ncm: add Apple Mac USB-C direct networking quirk
+
+Source: https://github.com/torvalds/linux/commit/a5148bc2fa27092862ac4b9e7b5c8340d60cff34
+License: GPL-2.0-only OR BSD-2-Clause, matching drivers/net/usb/cdc_ncm.c
+
+This repository copy contains only the upstream ID-table change.
+---
+ drivers/net/usb/cdc_ncm.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/net/usb/cdc_ncm.c b/drivers/net/usb/cdc_ncm.c
+--- a/drivers/net/usb/cdc_ncm.c
++++ b/drivers/net/usb/cdc_ncm.c
+@@ -2009,6 +2009,14 @@ static const struct usb_device_id cdc_devs[] = {
+ 		.driver_info = (unsigned long)&apple_private_interface_info,
+ 	},
+ 
++	/* Mac */
++	{ USB_DEVICE_INTERFACE_NUMBER(0x05ac, 0x1905, 0),
++		.driver_info = (unsigned long)&apple_private_interface_info,
++	},
++	{ USB_DEVICE_INTERFACE_NUMBER(0x05ac, 0x1905, 2),
++		.driver_info = (unsigned long)&apple_private_interface_info,
++	},
++
+ 	/* Ericsson MBM devices like F5521gw */
+ 	{ .match_flags = USB_DEVICE_ID_MATCH_INT_INFO
+ 		| USB_DEVICE_ID_MATCH_VENDOR,
+-- 
+2.50.1
