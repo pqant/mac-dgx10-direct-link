@@ -1,0 +1,2 @@
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="cdc_ncm", ATTRS{idVendor}=="05ac", ENV{ID_USB_INTERFACE_NUM}=="00", NAME="@PREFIX@0"
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="cdc_ncm", ATTRS{idVendor}=="05ac", ENV{ID_USB_INTERFACE_NUM}=="02", NAME="@PREFIX@2"

@@ -1,0 +1,1 @@
+network: {version: 2, ethernets: {@IFACE@: {addresses: [@GX10_IP@], mtu: @MTU@, dhcp4: false, dhcp6: false, link-local: [], optional: true}}}
