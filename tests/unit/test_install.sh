@@ -75,6 +75,12 @@ case "$1" in
   add)
     touch "$MGDL_ROOT/.dkms-added"
     ;;
+  remove)
+    rm -f "$MGDL_ROOT/.dkms-added"
+    ;;
+  install)
+    :
+    ;;
 esac
 true
 '
@@ -182,7 +188,71 @@ test_install_idempotent() {
   assert_eq "$grub1" "$grub2"
   assert_eq "$udev1" "$udev2"
   assert_eq "$netplan1" "$netplan2"
-  assert_eq "1" "$(grep -c '^dkms add ' "$root/calls.log")"
+  # I4: install.sh now always removes+re-adds+reinstalls the DKMS module on
+  # every run (so a pids.conf edit is always picked up), so re-running
+  # install twice produces two `dkms add` calls, not one.
+  assert_eq "2" "$(grep -c '^dkms add ' "$root/calls.log")"
+}
+
+test_install_rebuild_after_pids_change() {
+  local parts repo stub_dir root rc=0 grub1 grub2
+  parts="$(__good_env)"
+  repo="${parts%%|*}"
+  parts="${parts#*|}"
+  stub_dir="${parts%%|*}"
+  root="${parts#*|}"
+
+  __run_install "$repo" "$stub_dir" "$root" >"$root/.out1" 2>&1 || rc=$?
+  assert_eq "0" "$rc" "$(cat "$root/.out1")"
+  grub1="$(cat "$root/etc/default/grub.d/apple-ncm.cfg")"
+  assert_not_contains "$grub1" "05ac:1234:k"
+
+  printf '1234\n' >>"$repo/config/pids.conf"
+
+  rc=0
+  __run_install "$repo" "$stub_dir" "$root" >"$root/.out2" 2>&1 || rc=$?
+  assert_eq "0" "$rc" "$(cat "$root/.out2")"
+  grub2="$(cat "$root/etc/default/grub.d/apple-ncm.cfg")"
+  assert_contains "$grub2" "05ac:1234:k"
+
+  assert_contains "$(cat "$root/calls.log")" "dkms remove apple-cdc-ncm/1.0.0 --all"
+  assert_eq "2" "$(grep -c '^dkms add ' "$root/calls.log")"
+  assert_eq "2" "$(grep -c '^dkms install ' "$root/calls.log")"
+}
+
+test_install_invalid_pid_aborts_before_change() {
+  local parts repo stub_dir root rc=0
+  parts="$(__good_env)"
+  repo="${parts%%|*}"
+  parts="${parts#*|}"
+  stub_dir="${parts%%|*}"
+  root="${parts#*|}"
+
+  printf '19g5\n' >"$repo/config/pids.conf"
+
+  __run_install "$repo" "$stub_dir" "$root" >"$root/.out" 2>&1 || rc=$?
+  assert_eq "64" "$rc" "$(cat "$root/.out")"
+  assert_file_absent "$root/etc/default/grub.d/apple-ncm.cfg"
+  assert_file_absent "$root/usr/src/apple-cdc-ncm-1.0.0"
+  assert_eq "" "$(cat "$root/calls.log")"
+}
+
+test_install_invalid_link_conf_aborts_before_change() {
+  local parts repo stub_dir root rc=0
+  parts="$(__good_env)"
+  repo="${parts%%|*}"
+  parts="${parts#*|}"
+  stub_dir="${parts%%|*}"
+  root="${parts#*|}"
+
+  printf 'GX10_IP=192.168.20.20/24\nMAC_IP=192.168.20.17/24\nMTU=1500\nIFACE_NUM=9\nIFACE_PREFIX=macncm\n' \
+    >"$repo/config/link.conf"
+
+  __run_install "$repo" "$stub_dir" "$root" >"$root/.out" 2>&1 || rc=$?
+  assert_eq "64" "$rc" "$(cat "$root/.out")"
+  assert_file_absent "$root/etc/default/grub.d/apple-ncm.cfg"
+  assert_file_absent "$root/usr/src/apple-cdc-ncm-1.0.0"
+  assert_eq "" "$(cat "$root/calls.log")"
 }
 
 test_install_secureboot_gate() {

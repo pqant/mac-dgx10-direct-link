@@ -44,6 +44,12 @@ if [ -z "${MGDL_ROOT:-}" ] && [ "$(id -u 2>/dev/null || echo 0)" -ne 0 ]; then
   exit 64
 fi
 
+# -- Step 0: validate config right after argument parsing, before any side
+# effect (I2/I3). A bare failing call here aborts under `set -e` with the
+# exit code read_pids/load_link_conf returned (64 for a bad config).
+load_link_conf "$link_conf"
+pids_out="$(read_pids "$pids_conf")"
+
 # run_cmd CMD... - runs CMD, or prints "DRY: CMD..." instead when --dry-run.
 run_cmd() {
   if [ "$dry_run" -eq 1 ]; then
@@ -54,22 +60,23 @@ run_cmd() {
 }
 
 # render_template TEMPLATE DEST [TOKEN VALUE]... - substitutes each
-# TOKEN with VALUE in TEMPLATE's content and writes it to DEST (mode 600),
-# or prints "DRY: render DEST" instead when --dry-run.
+# TOKEN with VALUE in TEMPLATE's content and writes it to DEST (mode 600,
+# never world-readable even momentarily), or prints "DRY: render DEST"
+# instead when --dry-run.
 render_template() {
   local template="$1" dst="$2" content
   shift 2
   content="$(cat "$template")"
   while [ "$#" -ge 2 ]; do
-    content="${content//$1/$2}"
+    content="${content//"$1"/"$2"}"
     shift 2
   done
   if [ "$dry_run" -eq 1 ]; then
     printf 'DRY: render %s\n' "$dst"
   else
     mkdir -p "$(dirname "$dst")"
+    install -m 600 /dev/null "$dst"
     printf '%s\n' "$content" >"$dst"
-    chmod 600 "$dst"
   fi
 }
 
@@ -98,6 +105,8 @@ if command -v mokutil >/dev/null 2>&1; then
       exit 10
     fi
   fi
+elif [ -d "$MGDL_ROOT/sys/firmware/efi/efivars" ]; then
+  log_warn "mokutil not installed; cannot verify Secure Boot state on this UEFI system"
 fi
 
 # -- Step 3: fetch-source.sh for every installed kernel ----------------------
@@ -120,7 +129,11 @@ for k in "${kernels[@]}"; do
   fi
 done
 
-# -- Step 4: assemble /usr/src tree, dkms add/autoinstall --------------------
+# -- Step 4: assemble /usr/src tree, rebuild the DKMS module ----------------
+# Always remove+add+install (rather than relying on `dkms autoinstall`,
+# which skips kernels DKMS already thinks are built): a pids.conf edit
+# changes the quirk patch DKMS bakes into the module, so a kernel/module
+# combo that looks "already installed" may actually be stale (I4).
 src_dir="$MGDL_ROOT/usr/src/apple-cdc-ncm-1.0.0"
 if [ "$dry_run" -eq 1 ]; then
   printf 'DRY: install DKMS source tree at %s\n' "$src_dir"
@@ -136,14 +149,20 @@ else
   chmod +x "$src_dir/prepare.sh" "$src_dir/fetch-source.sh" "$src_dir/gen-quirk-patch.sh"
 fi
 
-dkms_status=""
-if command -v dkms >/dev/null 2>&1; then
-  dkms_status="$(dkms status apple-cdc-ncm/1.0.0 2>/dev/null || true)"
-fi
-if [ -z "$dkms_status" ]; then
-  run_cmd dkms add -m apple-cdc-ncm -v 1.0.0
-fi
-run_cmd dkms autoinstall
+run_cmd dkms remove apple-cdc-ncm/1.0.0 --all || true
+run_cmd dkms add -m apple-cdc-ncm -v 1.0.0
+for k in "${kernels[@]}"; do
+  [ -d "$MGDL_MODULES_DIR/$k/build" ] || continue
+  install_rc=0
+  run_cmd dkms install -m apple-cdc-ncm -v 1.0.0 -k "$k" || install_rc=$?
+  if [ "$install_rc" -ne 0 ]; then
+    if [ "$k" = "$running_kver" ]; then
+      log_error "dkms install failed for running kernel $k"
+      exit 1
+    fi
+    log_warn "dkms install failed for $k; continuing"
+  fi
+done
 
 # -- Step 5: depmod -a, override if the effective module is still in-tree ---
 run_cmd depmod -a
@@ -169,7 +188,6 @@ if [ "$quirk_rc" -ne 0 ] && [[ "$effective_module" != *updates/dkms* ]]; then
 fi
 
 # -- Step 6: render templates, reload grub/udev/netplan ----------------------
-load_link_conf "$link_conf"
 iface="${IFACE_PREFIX}${IFACE_NUM}"
 
 quirks=""
@@ -180,7 +198,7 @@ while IFS= read -r pid; do
   else
     quirks="$quirks,05ac:$pid:k"
   fi
-done < <(read_pids "$pids_conf")
+done <<<"$pids_out"
 
 render_template "$repo_root/system/grub/apple-ncm.cfg" \
   "$MGDL_ROOT/etc/default/grub.d/apple-ncm.cfg" \
