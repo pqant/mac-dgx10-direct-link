@@ -76,6 +76,9 @@ case "$1" in
     touch "$MGDL_ROOT/.dkms-added"
     ;;
   remove)
+    if [ -f "$MGDL_ROOT/.dkms-remove-fail" ]; then
+      exit 1
+    fi
     rm -f "$MGDL_ROOT/.dkms-added"
     ;;
   install)
@@ -309,6 +312,30 @@ test_uninstall_removes_all() {
   assert_file_absent "$root/etc/depmod.d/apple-ncm.conf"
   assert_file_absent "$root/usr/src/apple-cdc-ncm-1.0.0"
   assert_contains "$(cat "$root/calls.log")" "dkms remove apple-cdc-ncm/1.0.0 --all"
+}
+
+test_uninstall_dkms_remove_failure_warns_and_continues() {
+  local parts repo stub_dir root rc=0
+  parts="$(__good_env)"
+  repo="${parts%%|*}"
+  parts="${parts#*|}"
+  stub_dir="${parts%%|*}"
+  root="${parts#*|}"
+
+  __run_install "$repo" "$stub_dir" "$root" >"$root/.out" 2>&1 || rc=$?
+  assert_eq "0" "$rc" "$(cat "$root/.out")"
+
+  touch "$root/.dkms-remove-fail"
+  rc=0
+  __run_uninstall "$repo" "$stub_dir" "$root" >"$root/.out2" 2>&1 || rc=$?
+  assert_eq "0" "$rc" "$(cat "$root/.out2")"
+  assert_contains "$(cat "$root/.out2")" "WARN"
+
+  assert_file_absent "$root/etc/default/grub.d/apple-ncm.cfg"
+  assert_file_absent "$root/etc/udev/rules.d/90-apple-ncm.rules"
+  assert_file_absent "$root/etc/netplan/60-apple-ncm.yaml"
+  assert_file_absent "$root/etc/depmod.d/apple-ncm.conf"
+  assert_file_absent "$root/usr/src/apple-cdc-ncm-1.0.0"
 }
 
 test_uninstall_partial() {

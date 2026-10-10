@@ -34,10 +34,24 @@ test_net_up_dry_run_default() {
   mk_stub "$stub_dir" ip 'echo "ip $*" >>"$MGDL_ROOT/calls.log"'
 
   out="$(MGDL_ROOT="$root" PATH="$stub_dir:$PATH" bash "$repo/scripts/net-up.sh")"
-  assert_contains "$out" "DRY: ip addr add 192.168.20.20/24 dev macncm0"
+  assert_contains "$out" "DRY: ip addr replace 192.168.20.20/24 dev macncm0"
 
-  cnt="$(grep -c 'addr add' "$root/calls.log")" || true
+  cnt="$(grep -c 'addr replace' "$root/calls.log")" || true
   assert_eq "0" "${cnt:-0}"
+}
+
+test_net_up_apply_uses_addr_replace() {
+  local repo stub_dir root out
+  repo="$(__repo_env)"
+  stub_dir="$(mk_tmp)"
+  root="$(mk_tmp)"
+  : >"$root/calls.log"
+  mk_stub "$stub_dir" ip 'echo "ip $*" >>"$MGDL_ROOT/calls.log"'
+
+  MGDL_ROOT="$root" PATH="$stub_dir:$PATH" bash "$repo/scripts/net-up.sh" --apply >/dev/null
+  out="$(cat "$root/calls.log")"
+  assert_contains "$out" "ip addr replace 192.168.20.20/24 dev macncm0"
+  assert_not_contains "$out" "ip addr add"
 }
 
 test_bench_parses_iperf_json() {

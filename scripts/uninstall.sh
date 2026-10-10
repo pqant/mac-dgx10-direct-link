@@ -60,7 +60,7 @@ if command -v dkms >/dev/null 2>&1; then
   dkms_status="$(dkms status apple-cdc-ncm/1.0.0 2>/dev/null || true)"
 fi
 if [ -n "$dkms_status" ]; then
-  run_cmd dkms remove apple-cdc-ncm/1.0.0 --all
+  run_cmd dkms remove apple-cdc-ncm/1.0.0 --all || log_warn "dkms remove apple-cdc-ncm/1.0.0 failed; continuing with file cleanup"
 fi
 
 # -- remove source tree and all system-integration files ---------------------

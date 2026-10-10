@@ -72,7 +72,7 @@ run_or_print() {
 if [ "$down" -eq 1 ]; then
   run_or_print ip addr del "$GX10_IP" dev "$iface"
 else
-  run_or_print ip addr add "$GX10_IP" dev "$iface"
+  run_or_print ip addr replace "$GX10_IP" dev "$iface"
   run_or_print ip link set "$iface" up
 fi
 
