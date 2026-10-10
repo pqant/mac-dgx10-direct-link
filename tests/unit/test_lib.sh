@@ -127,6 +127,57 @@ test_upstream_version_mismatch_refused() {
   assert_exit 1 upstream_version "$kver"
 }
 
+test_upstream_version_linux_modules_fallback() {
+  local tmp stub_dir root changelog_dir changelog_path kver out
+  tmp="$(mk_tmp)"
+  stub_dir="$(mk_tmp)"
+  root="$tmp/root"
+  kver="6.17.0-2-nvidia"
+  # I7: no linux-image-$kver changelog, only linux-modules-$kver.
+  changelog_dir="$root/usr/share/doc/linux-modules-$kver"
+  mkdir -p "$changelog_dir"
+  changelog_path="$changelog_dir/changelog.Debian.gz"
+  if command -v gzip >/dev/null 2>&1; then
+    printf '  * Upstream stable to v6.17.4\n' | gzip -c >"$changelog_path"
+  else
+    mk_stub "$stub_dir" zcat 'printf "  * Upstream stable to v6.17.4\n"'
+    : >"$changelog_path"
+  fi
+  mk_stub "$stub_dir" uname 'echo "6.17.0-1-nvidia"'
+
+  unset -v MGDL_UPSTREAM_VERSION || true
+  MGDL_ROOT="$root"
+  PATH="$stub_dir:$PATH"
+  out="$(upstream_version "$kver")"
+  assert_eq "6.17.4" "$out"
+}
+
+test_upstream_version_changelog_picks_matching_major_minor() {
+  local tmp stub_dir root changelog_dir changelog_path kver out
+  tmp="$(mk_tmp)"
+  stub_dir="$(mk_tmp)"
+  root="$tmp/root"
+  kver="6.17.0-2-nvidia"
+  changelog_dir="$root/usr/share/doc/linux-image-$kver"
+  mkdir -p "$changelog_dir"
+  changelog_path="$changelog_dir/changelog.Debian.gz"
+  # M6: the newest entry is for an unrelated 6.18 rebase; the matching
+  # 6.17.x entry for this kernel comes later in the file.
+  if command -v gzip >/dev/null 2>&1; then
+    printf '  * Rebase to v6.18.1\n  * Upstream stable to v6.17.4\n' | gzip -c >"$changelog_path"
+  else
+    mk_stub "$stub_dir" zcat 'printf "  * Rebase to v6.18.1\n  * Upstream stable to v6.17.4\n"'
+    : >"$changelog_path"
+  fi
+  mk_stub "$stub_dir" uname 'echo "6.17.0-1-nvidia"'
+
+  unset -v MGDL_UPSTREAM_VERSION || true
+  MGDL_ROOT="$root"
+  PATH="$stub_dir:$PATH"
+  out="$(upstream_version "$kver")"
+  assert_eq "6.17.4" "$out"
+}
+
 test_stable_tag() {
   assert_eq "v6.17" "$(stable_tag 6.17.0)"
   assert_eq "v6.17.9" "$(stable_tag 6.17.9)"

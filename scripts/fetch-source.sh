@@ -82,11 +82,32 @@ __write_origin() {
 
 # __try_cache KVER DEST_DIR - 0 if an existing valid cache file was kept.
 __try_cache() {
-  local kver="$1" dest_dir="$2"
+  local kver="$1" dest_dir="$2" origin_line="cache"
   [ -s "$dest_dir/cdc_ncm.c" ] || return 1
   __valid_src "$dest_dir/cdc_ncm.c" || return 1
-  __write_origin "$dest_dir" "cache" "$dest_dir/cdc_ncm.c"
+  # I5: preserve the real origin recorded by the prior fetch instead of
+  # overwriting it with the literal "cache" label.
+  if [ -s "$dest_dir/origin" ]; then
+    local prior
+    prior="$(head -n1 "$dest_dir/origin")"
+    [ -n "$prior" ] && origin_line="$prior"
+  fi
+  __write_origin "$dest_dir" "$origin_line" "$dest_dir/cdc_ncm.c"
   return 0
+}
+
+# __dpkg_query_source PKG_BASENAME - echoes "pkg ver" for the installed
+# PKG_BASENAME-$kver package, trying linux-image-$kver first and falling
+# back to linux-modules-$kver (I7: some kernels ship headers/changelog
+# only under linux-modules, e.g. minimal/cloud flavours).
+__dpkg_query_source() {
+  local kver="$1" pkg_ver
+  pkg_ver="$(dpkg-query -W -f='${source:Package} ${source:Version}' "linux-image-$kver" 2>/dev/null)" || pkg_ver=""
+  if [ -z "$pkg_ver" ]; then
+    pkg_ver="$(dpkg-query -W -f='${source:Package} ${source:Version}' "linux-modules-$kver" 2>/dev/null)" || pkg_ver=""
+  fi
+  [ -n "$pkg_ver" ] || return 1
+  printf '%s\n' "$pkg_ver"
 }
 
 # __try_ubuntu_src KVER DEST_DIR - 0 if a deb-src package yielded a valid
@@ -95,7 +116,7 @@ __try_ubuntu_src() {
   local kver="$1" dest_dir="$2" pkg_ver pkg ver work
 
   command -v dpkg-query >/dev/null 2>&1 || return 1
-  pkg_ver="$(dpkg-query -W -f='${source:Package} ${source:Version}' "linux-image-$kver" 2>/dev/null)" || return 1
+  pkg_ver="$(__dpkg_query_source "$kver")" || return 1
   [ -n "$pkg_ver" ] || return 1
   pkg="${pkg_ver%% *}"
   ver="${pkg_ver#* }"
@@ -132,7 +153,7 @@ __try_upstream_stable() {
 
   version="$(upstream_version "$kver")" || return 1
   tag="$(stable_tag "$version")"
-  url="$(printf "$MGDL_STABLE_URL_TEMPLATE" "${tag#v}")"
+  url="$(printf -- "$MGDL_STABLE_URL_TEMPLATE" "${tag#v}")"
 
   command -v curl >/dev/null 2>&1 || return 1
   tmp_file="$(mktemp)"
@@ -165,6 +186,8 @@ fetch_one() {
     return 0
   fi
   rm -f "$dest_dir/cdc_ncm.c" "$dest_dir/origin"
+  # M7: don't leave an empty per-kver state dir behind after total failure.
+  rmdir "$dest_dir" 2>/dev/null || true
   return 1
 }
 

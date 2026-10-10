@@ -164,9 +164,18 @@ upstream_version() {
 
     if [ -z "$version" ]; then
       changelog="$MGDL_ROOT/usr/share/doc/linux-image-$kver/changelog.Debian.gz"
+      if [ ! -r "$changelog" ]; then
+        # I7: linux-image-$kver's doc dir may not exist (e.g. minimal/cloud
+        # kernel flavours); fall back to the linux-modules-$kver changelog.
+        changelog="$MGDL_ROOT/usr/share/doc/linux-modules-$kver/changelog.Debian.gz"
+      fi
       if [ -r "$changelog" ]; then
+        # M6: pick the first changelog entry whose version actually matches
+        # this kernel's major.minor, rather than blindly taking the first
+        # "Upstream stable to"/"Rebase to" line in the file (which may
+        # belong to a later/earlier release recorded in the same changelog).
         line="$(zcat "$changelog" 2>/dev/null |
-          grep -iE '(Upstream stable to|Rebase to)[[:space:]]+v?[0-9]+\.[0-9]+(\.[0-9]+)?' |
+          grep -iE "(Upstream stable to|Rebase to)[[:space:]]+v?${mm//./\\.}(\.[0-9]+)?([^0-9]|\$)" |
           head -n1 || true)"
         if [[ "$line" =~ (Upstream[[:space:]]stable[[:space:]]to|Rebase[[:space:]]to)[[:space:]]+v?([0-9]+\.[0-9]+(\.[0-9]+)?) ]]; then
           version="${BASH_REMATCH[2]}"
