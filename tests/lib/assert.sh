@@ -34,10 +34,22 @@ mk_stub() {
   chmod +x "$dir/$name"
 }
 
+# __assert_fail MSG - prints MSG to stderr and records a failure for the
+# test currently running (via $ASSERT_STATUS_FILE, set by run_tests), so
+# run_tests can detect it even if it is not the test function's last
+# command. Always returns 1.
+__assert_fail() {
+  echo "$1" >&2
+  if [ -n "${ASSERT_STATUS_FILE:-}" ]; then
+    echo fail >>"$ASSERT_STATUS_FILE"
+  fi
+  return 1
+}
+
 assert_eq() {
   local expected="$1" actual="$2" msg="${3:-}"
   if [ "$expected" != "$actual" ]; then
-    echo "assert_eq failed: expected [$expected] got [$actual] ${msg}" >&2
+    __assert_fail "assert_eq failed: expected [$expected] got [$actual] ${msg}"
     return 1
   fi
 }
@@ -45,7 +57,7 @@ assert_eq() {
 assert_contains() {
   local haystack="$1" needle="$2" msg="${3:-}"
   if [[ "$haystack" != *"$needle"* ]]; then
-    echo "assert_contains failed: [$haystack] does not contain [$needle] ${msg}" >&2
+    __assert_fail "assert_contains failed: [$haystack] does not contain [$needle] ${msg}"
     return 1
   fi
 }
@@ -53,7 +65,7 @@ assert_contains() {
 assert_not_contains() {
   local haystack="$1" needle="$2" msg="${3:-}"
   if [[ "$haystack" == *"$needle"* ]]; then
-    echo "assert_not_contains failed: [$haystack] contains [$needle] ${msg}" >&2
+    __assert_fail "assert_not_contains failed: [$haystack] contains [$needle] ${msg}"
     return 1
   fi
 }
@@ -64,7 +76,7 @@ assert_exit() {
   local actual_code=0
   "$@" || actual_code=$?
   if [ "$actual_code" != "$expected_code" ]; then
-    echo "assert_exit failed: expected [$expected_code] got [$actual_code] for: $*" >&2
+    __assert_fail "assert_exit failed: expected [$expected_code] got [$actual_code] for: $*"
     return 1
   fi
 }
@@ -72,7 +84,7 @@ assert_exit() {
 assert_file_exists() {
   local path="$1"
   if [ ! -e "$path" ]; then
-    echo "assert_file_exists failed: [$path] does not exist" >&2
+    __assert_fail "assert_file_exists failed: [$path] does not exist"
     return 1
   fi
 }
@@ -80,21 +92,41 @@ assert_file_exists() {
 assert_file_absent() {
   local path="$1"
   if [ -e "$path" ]; then
-    echo "assert_file_absent failed: [$path] exists" >&2
+    __assert_fail "assert_file_absent failed: [$path] exists"
     return 1
   fi
 }
 
+# run_tests - runs every declared test_* function and reports "ok"/"not ok".
+# A test is reported "not ok" if its last command fails (normal bash exit
+# status) OR if any assert_* call inside it failed, even if that failure was
+# not the function's last command (see I1: bash's `set -e` has no effect
+# inside an `if` condition or a subshell run as one, so relying on the
+# function's own exit status alone hides every non-last assertion failure).
+# Each test runs with errexit disabled (so a failing assert does not abort
+# the function before later asserts run) and reports failures through a
+# per-test status file rather than through `set -e`.
 run_tests() {
   local test_names test_name failed=0
   test_names=$(declare -F | awk '{print $3}' | grep '^test_' || true)
   for test_name in $test_names; do
-    if (set -euo pipefail; "$test_name"); then
+    local status_file rc=0
+    status_file="$(mktemp)"
+    set +e
+    (
+      ASSERT_STATUS_FILE="$status_file"
+      export ASSERT_STATUS_FILE
+      "$test_name"
+    )
+    rc=$?
+    set -e
+    if [ "$rc" -eq 0 ] && [ ! -s "$status_file" ]; then
       echo "ok $test_name"
     else
       echo "not ok $test_name"
       failed=1
     fi
+    rm -f "$status_file"
   done
   if [ "$failed" -ne 0 ]; then
     exit 1
