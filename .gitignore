@@ -5,3 +5,5 @@ build/
 *.mod*
 .tmp*
 research/data/
+__pycache__/
+*.pyc
