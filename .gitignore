@@ -1,0 +1,7 @@
+tests/fixtures/cache/
+build/
+*.ko
+*.o
+*.mod*
+.tmp*
+research/data/
