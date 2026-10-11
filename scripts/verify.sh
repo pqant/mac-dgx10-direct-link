@@ -39,6 +39,7 @@ if $all_kernels; then
   if [ -d "$MGDL_MODULES_DIR" ]; then
     for d in "$MGDL_MODULES_DIR"/*/; do
       [ -d "$d" ] || continue
+      [[ "$(basename "$d")" =~ ^[0-9] ]] || continue
       kernels+=("$(basename "$d")")
     done
   fi

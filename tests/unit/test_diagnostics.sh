@@ -104,11 +104,11 @@ test_verify_mixed_kernels() {
   grub_dir="$root/etc/default/grub.d"
   cmdline_file="$root/proc_cmdline"
 
-  mkdir -p "$mods_dir/A/kernel/drivers/net/usb" "$mods_dir/B/kernel/drivers/net/usb"
-  : >"$mods_dir/A/kernel/drivers/net/usb/cdc_ncm.ko"
-  : >"$mods_dir/B/kernel/drivers/net/usb/cdc_ncm.ko"
-  mkdir -p "$state_dir/src/B"
-  : >"$state_dir/src/B/cdc_ncm.c"
+  mkdir -p "$mods_dir/6.0.0-a/kernel/drivers/net/usb" "$mods_dir/6.0.0-b/kernel/drivers/net/usb"
+  : >"$mods_dir/6.0.0-a/kernel/drivers/net/usb/cdc_ncm.ko"
+  : >"$mods_dir/6.0.0-b/kernel/drivers/net/usb/cdc_ncm.ko"
+  mkdir -p "$state_dir/src/6.0.0-b"
+  : >"$state_dir/src/6.0.0-b/cdc_ncm.c"
   mkdir -p "$grub_dir"
   : >"$grub_dir/apple-ncm.cfg"
   printf 'BOOT_IMAGE=/vmlinuz usbcore.quirks=05ac:1905:k,05ac:1902:k root=/dev/sda1\n' >"$cmdline_file"
@@ -116,28 +116,28 @@ test_verify_mixed_kernels() {
   mk_stub "$stub_dir" modinfo '
 args="$*"
 case "$args" in
-  "-k A -F alias cdc_ncm" | "-k B -F alias cdc_ncm")
+  "-k 6.0.0-a -F alias cdc_ncm" | "-k 6.0.0-b -F alias cdc_ncm")
     printf "alias: usb:v05ACp1905d*dc*dsc*dp*ic*isc*ip*in00*\n"
     printf "alias: usb:v05ACp1905d*dc*dsc*dp*ic*isc*ip*in02*\n"
     ;;
-  "-k C -F alias cdc_ncm")
+  "-k 6.0.0-c -F alias cdc_ncm")
     printf "alias: usb:v05ACp12A8d*dc*dsc*dp*ic*isc*ip*in00*\n"
     ;;
-  *"-F alias"*"/A/"*)
+  *"-F alias"*"/6.0.0-a/"*)
     printf "alias: usb:v05ACp1905d*dc*dsc*dp*ic*isc*ip*in00*\n"
     printf "alias: usb:v05ACp1905d*dc*dsc*dp*ic*isc*ip*in02*\n"
     ;;
   *"-F alias"*)
     printf "alias: usb:v05ACp12A8d*dc*dsc*dp*ic*isc*ip*in00*\n"
     ;;
-  "-k A -n cdc_ncm")
-    echo "/lib/modules/A/kernel/drivers/net/usb/cdc_ncm.ko"
+  "-k 6.0.0-a -n cdc_ncm")
+    echo "/lib/modules/6.0.0-a/kernel/drivers/net/usb/cdc_ncm.ko"
     ;;
-  "-k B -n cdc_ncm")
-    echo "/lib/modules/B/updates/dkms/cdc_ncm.ko"
+  "-k 6.0.0-b -n cdc_ncm")
+    echo "/lib/modules/6.0.0-b/updates/dkms/cdc_ncm.ko"
     ;;
-  "-k C -n cdc_ncm")
-    echo "/lib/modules/C/kernel/drivers/net/usb/cdc_ncm.ko"
+  "-k 6.0.0-c -n cdc_ncm")
+    echo "/lib/modules/6.0.0-c/kernel/drivers/net/usb/cdc_ncm.ko"
     ;;
   *)
     exit 1
@@ -146,8 +146,8 @@ esac
 '
   mk_stub "$stub_dir" dkms '
 case "$*" in
-  "status -m apple-cdc-ncm -v 1.0.0 -k B")
-    echo "apple-cdc-ncm/1.0.0, B, x86_64: installed"
+  "status -m apple-cdc-ncm -v 1.0.0 -k 6.0.0-b")
+    echo "apple-cdc-ncm/1.0.0, 6.0.0-b, x86_64: installed"
     ;;
   *)
     exit 1
@@ -161,16 +161,16 @@ esac
   assert_eq "0" "$rc"
   assert_not_contains "$out" "FAIL"
 
-  mkdir -p "$mods_dir/C/kernel/drivers/net/usb"
-  : >"$mods_dir/C/kernel/drivers/net/usb/cdc_ncm.ko"
+  mkdir -p "$mods_dir/6.0.0-c/kernel/drivers/net/usb"
+  : >"$mods_dir/6.0.0-c/kernel/drivers/net/usb/cdc_ncm.ko"
 
   rc=0
   out="$(PATH="$stub_dir:$PATH" MGDL_ROOT="$root" MGDL_MODULES_DIR="$mods_dir" \
     MGDL_STATE_DIR="$state_dir" MGDL_PROC_CMDLINE="$cmdline_file" \
     bash "$repo/scripts/verify.sh" --all-kernels)" || rc=$?
   assert_eq "1" "$rc"
-  assert_contains "$out" "FAIL C:"
-  assert_not_contains "$(grep 'FAIL' <<<"$out" | grep -v '^FAIL C:' || true)" "FAIL"
+  assert_contains "$out" "FAIL 6.0.0-c:"
+  assert_not_contains "$(grep 'FAIL' <<<"$out" | grep -v '^FAIL 6.0.0-c:' || true)" "FAIL"
 }
 
 test_doctor_unknown_pid() {

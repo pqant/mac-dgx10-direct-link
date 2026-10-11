@@ -224,6 +224,24 @@ test_install_rebuild_after_pids_change() {
   assert_eq "2" "$(grep -c '^dkms install ' "$root/calls.log")"
 }
 
+test_install_skips_old_kernels_silently() {
+  local parts repo stub_dir root rc=0 old="6.11.0-1-nvidia"
+  parts="$(__good_env)"
+  repo="${parts%%|*}"
+  parts="${parts#*|}"
+  stub_dir="${parts%%|*}"
+  root="${parts#*|}"
+  mkdir -p "$root/lib/modules/$old/build" "$root/lib/modules/kernel"
+
+  MGDL_STABLE_URL_TEMPLATE="file:///nonexistent/%s" \
+    __run_install "$repo" "$stub_dir" "$root" >"$root/.out" 2>&1 || rc=$?
+  assert_eq "0" "$rc" "$(cat "$root/.out")"
+  assert_not_contains "$(cat "$root/.out")" "$old"
+  assert_not_contains "$(cat "$root/.out")" "for kernel"
+  assert_eq "1" "$(grep -c '^dkms install ' "$root/calls.log")"
+  assert_contains "$(cat "$root/calls.log")" "dkms install -m apple-cdc-ncm -v 1.0.0 -k $kver"
+}
+
 test_install_invalid_pid_aborts_before_change() {
   local parts repo stub_dir root rc=0
   parts="$(__good_env)"

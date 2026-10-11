@@ -114,18 +114,22 @@ kernels=()
 if [ -d "$MGDL_MODULES_DIR" ]; then
   for d in "$MGDL_MODULES_DIR"/*/; do
     [ -d "$d" ] || continue
+    # Only kernel version dirs (e.g. 7.0.0-1019-nvidia), not stray dirs.
+    [[ "$(basename "$d")" =~ ^[0-9] ]] || continue
     kernels+=("$(basename "$d")")
   done
 fi
+# Older kernels whose source cannot be resolved are skipped silently; only
+# the running kernel is required. `make verify` reports per-kernel status.
+declare -A skip_kernel=()
 for k in "${kernels[@]}"; do
-  fetch_rc=0
-  run_cmd "$script_dir/fetch-source.sh" "$k" || fetch_rc=$?
-  if [ "$fetch_rc" -ne 0 ]; then
-    if [ "$k" = "$running_kver" ]; then
+  if [ "$k" = "$running_kver" ]; then
+    if ! run_cmd "$script_dir/fetch-source.sh" "$k"; then
       log_error "fetch-source.sh failed for running kernel $k"
       exit 1
     fi
-    log_warn "fetch-source.sh failed for $k; continuing"
+  elif ! run_cmd "$script_dir/fetch-source.sh" "$k" >/dev/null 2>&1; then
+    skip_kernel[$k]=1
   fi
 done
 
@@ -149,18 +153,18 @@ else
   chmod +x "$src_dir/prepare.sh" "$src_dir/fetch-source.sh" "$src_dir/gen-quirk-patch.sh"
 fi
 
-run_cmd dkms remove apple-cdc-ncm/1.0.0 --all || true
-run_cmd dkms add -m apple-cdc-ncm -v 1.0.0
+run_cmd dkms remove apple-cdc-ncm/1.0.0 --all >/dev/null 2>&1 || true
+run_cmd dkms add -m apple-cdc-ncm -v 1.0.0 >/dev/null
 for k in "${kernels[@]}"; do
   [ -d "$MGDL_MODULES_DIR/$k/build" ] || continue
-  install_rc=0
-  run_cmd dkms install -m apple-cdc-ncm -v 1.0.0 -k "$k" || install_rc=$?
-  if [ "$install_rc" -ne 0 ]; then
-    if [ "$k" = "$running_kver" ]; then
+  [ -z "${skip_kernel[$k]:-}" ] || continue
+  if [ "$k" = "$running_kver" ]; then
+    if ! run_cmd dkms install -m apple-cdc-ncm -v 1.0.0 -k "$k"; then
       log_error "dkms install failed for running kernel $k"
       exit 1
     fi
-    log_warn "dkms install failed for $k; continuing"
+  else
+    run_cmd dkms install -m apple-cdc-ncm -v 1.0.0 -k "$k" >/dev/null 2>&1 || true
   fi
 done
 
@@ -212,7 +216,10 @@ render_template "$repo_root/system/netplan/60-apple-ncm.yaml" \
 
 run_cmd update-grub
 run_cmd udevadm control --reload
-run_cmd netplan generate
+if ! run_cmd netplan generate; then
+  log_error "netplan generate failed; fix the file named above, then rerun: sudo make install"
+  exit 1
+fi
 
 # -- Step 7: owner follow-up --------------------------------------------------
 echo '[OWNER] reboot required for usbcore.quirks; then plug the Mac and run: make doctor'
