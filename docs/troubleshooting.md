@@ -92,10 +92,9 @@ MOK enrolment screen **[OWNER]**, then re-run `make install`.
 ## 10. `tests/link.sh` fails with the wrong route
 
 `ip route get 192.168.20.17` resolved to an interface other than the USB
-link (see the known risk in `README.md`: the USB link shares
-`172.16.0.0/24` with Wi-Fi and the wired Ethernet). Add a more specific
-route or policy rule so traffic to the Mac's `192.168.20.17` prefers
-`macncm<N>`; do not change the default route.
+link. Check that no other interface uses `192.168.20.0/24`; if one does,
+add a more specific route or policy rule so traffic to the Mac's
+`192.168.20.17` prefers `macncm<N>`; do not change the default route.
 
 ## 11. `config/pids.conf` has an unknown/invalid PID
 

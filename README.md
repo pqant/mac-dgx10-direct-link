@@ -19,13 +19,11 @@ GX10, decode on Mac).
 | **USB-C (new, static)** | **M5 Max 192.168.20.17/24** | **GX10 192.168.20.20/24** | This project |
 
 **Owner decision:** use `192.168.20.17` (Mac) and `192.168.20.20` (GX10) with mask
-`255.255.255.0`. No hostnames are added.
-
-**Known risk (recorded, not mitigated by design):** the USB link shares
-`172.16.0.0/24` with Wi-Fi and the wired Ethernet. The kernel may select a
-different interface for `192.168.20.17`. Detection: `tests/link.sh` fails if
-`ip route get 192.168.20.17` does not resolve to the USB interface, and
-`bench.sh` records the egress interface with each result.
+`255.255.255.0`. No hostnames are added. The link uses its own subnet, so it
+never overlaps the LAN (`172.16.0.0/24`), and it avoids `10.x`, which VPN
+or zero-trust clients on the Mac may capture. Detection: `tests/link.sh`
+fails if `ip route get 192.168.20.17` does not resolve to the USB interface,
+and `bench.sh` records the egress interface with each result.
 
 ## Quick start
 

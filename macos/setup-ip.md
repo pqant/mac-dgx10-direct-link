@@ -18,30 +18,26 @@ gateway/router and no DNS are set on this link.
    networksetup -setmanual "<service>" 192.168.20.17 255.255.255.0
    ```
 
-3. If the LAN also uses 172.16.0.0/24, the Mac would send 192.168.20.20
-   over Wi-Fi/Ethernet. Pin the GX10 to the cable with a host route
-   (`en3` is the cable interface whose `status` is `active`):
+   No extra route is needed: `192.168.20.0/24` is used only by this cable,
+   so it never overlaps the LAN. Avoid `10.x` for this link: VPN or
+   zero-trust clients may
+   capture `10.x` traffic before it reaches the cable.
 
-   ```sh
-   sudo route -n add -host 192.168.20.20 -interface en3
-   ```
-
-   This route is lost on unplug or reboot; re-run it after reconnecting.
-
-4. Verify the address and route took effect:
+3. Verify the address and route took effect (`en3` is the cable interface
+   whose `status` is `active`):
 
    ```sh
    ifconfig en3
    route -n get 192.168.20.20
    ```
 
-5. To revert to DHCP (for example, before unplugging or re-testing):
+4. To revert to DHCP (for example, before unplugging or re-testing):
 
    ```sh
    networksetup -setdhcp "<service>"
    ```
 
-6. For bandwidth benchmarks (paired with `tests/bench.sh` on the GX10 side),
+5. For bandwidth benchmarks (paired with `tests/bench.sh` on the GX10 side),
    start an iperf3 server:
 
    ```sh
