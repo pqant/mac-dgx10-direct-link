@@ -107,6 +107,7 @@ esac
   mk_stub "$dir" update-grub 'echo "update-grub $*" >>"$MGDL_ROOT/calls.log"'
   mk_stub "$dir" udevadm 'echo "udevadm $*" >>"$MGDL_ROOT/calls.log"'
   mk_stub "$dir" netplan 'echo "netplan $*" >>"$MGDL_ROOT/calls.log"'
+  mk_stub "$dir" nmcli 'echo "nmcli $*" >>"$MGDL_ROOT/calls.log"'
   mk_stub "$dir" mokutil '
 echo "mokutil $*" >>"$MGDL_ROOT/calls.log"
 case "$1" in
@@ -161,7 +162,7 @@ test_install_renders_files() {
   assert_contains "$(cat "$root/etc/default/grub.d/apple-ncm.cfg")" \
     "usbcore.quirks=05ac:1905:k,05ac:1902:k"
   assert_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "addresses: [192.168.20.20/32]"
-  # A /24 on the link would add a subnet route that hijacks a LAN on 172.16.0.0/24.
+  # A /24 on the link would add a subnet route that could hijack another LAN.
   assert_not_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "/24"
   assert_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "macncm0"
   # Only a host route to the Mac: never a default route or gateway.
@@ -175,6 +176,8 @@ test_install_renders_files() {
   assert_not_contains "$(cat "$root/etc/udev/rules.d/90-apple-ncm.rules")" 'DRIVERS=='
   assert_contains "$(cat "$root/etc/udev/rules.d/90-apple-ncm.rules")" '/sys/bus/usb/drivers/cdc_ncm/bind'
   assert_contains "$(cat "$root/etc/udev/rules.d/90-apple-ncm.rules")" 'ENV{ID_USB_INTERFACE_NUM}!="00", ENV{NM_UNMANAGED}="1"'
+  # Without a reload, a running NetworkManager keeps the old link address.
+  assert_contains "$(cat "$root/calls.log")" "nmcli connection reload"
 }
 
 test_install_idempotent() {

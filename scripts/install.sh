@@ -220,6 +220,10 @@ if ! run_cmd netplan generate; then
   log_error "netplan generate failed; fix the file named above, then rerun: sudo make install"
   exit 1
 fi
+# netplan generate does not make a running NetworkManager re-read its profiles.
+if command -v nmcli >/dev/null 2>&1; then
+  run_cmd nmcli connection reload
+fi
 
 # -- Step 7: owner follow-up --------------------------------------------------
 echo '[OWNER] reboot required for usbcore.quirks; then plug the Mac and run: make doctor'
