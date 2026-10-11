@@ -7,3 +7,5 @@ build/
 research/data/
 __pycache__/
 *.pyc
+.superpowers/
+docs/superpowers/
