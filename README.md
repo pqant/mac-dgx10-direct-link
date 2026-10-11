@@ -49,28 +49,44 @@ See [`macos/setup-ip.md`](macos/setup-ip.md) for the Mac-side static IP steps.
 
 ## Measured performance
 
-First measurement on the USB-C link, before any tuning (MTU 1500, default
-`cdc_ncm` buffers). Hardware: MacBook Pro M5 Max (macOS 27) and ASUS Ascent
-GX10 (DGX OS, kernel 7.0). TCP throughput comes from a memory-to-memory socket
-test with 10 s runs; `iperf3` was not installed on either side.
+Hardware: MacBook Pro M5 Max (macOS 27) and ASUS Ascent GX10 (DGX OS,
+kernel 7.0), one USB-C cable, negotiated at 10 Gbit/s (USB 3.2 Gen 2x1).
+TCP throughput from `iperf3`, 4 parallel streams, 10 s runs.
 
-| Direction | 1 stream | 4 streams | 8 streams |
-|---|---|---|---|
-| Mac → GX10 | 0.98 Gbit/s | 0.94 Gbit/s | 0.94 Gbit/s |
-| GX10 → Mac | 1.16 Gbit/s | 0.83 Gbit/s | 0.76 Gbit/s |
+| Setup | Mac → GX10 | GX10 → Mac |
+|---|---|---|
+| Untuned (MTU 1500, 16 KiB NTB, IRQ on CPU0) | 0.73 Gbit/s | 0.97 Gbit/s |
+| xHCI interrupt moved to a big core | 3.5 Gbit/s | 3.9 Gbit/s |
+| + RPS on four more big cores | 6.0 Gbit/s | 4.1 Gbit/s |
+| + MTU 8178 and 32 KiB NTB (installed default) | **7.8 Gbit/s** | **6.0 Gbit/s** |
 
-| Metric | Value |
-|---|---|
-| RTT (50 pings) | min 1.87 / avg 2.52 / max 3.11 ms, 0 % loss |
-| USB negotiated speed | 10 Gbit/s (USB 3.2 Gen 2) |
-| Same test over loopback | 36 Gbit/s, so the tool is not the bottleneck |
+RTT is about 2-3 ms. Larger socket buffers, a larger softirq budget, other
+CPU choices, and pinning `iperf3` changed nothing measurable, so the
+remaining limit is the `cdc_ncm`/`usbnet` path itself: every outgoing
+packet is copied into an NTB, and `usbnet` has no NAPI or offloads. Gen 2x1
+carries about 8.5-8.8 Gbit/s of payload at best.
 
-The link currently delivers about 1 Gbit/s, roughly 10 % of the USB bus rate.
-Likely limits: the NTB buffers settle at 16 KiB although the device offers
-32 KiB, the GX10 side runs MTU 1500 while the Mac uses 8178, and the GX10
-interface shows dropped RX packets. Tuning these is the next step; results
-will be added here.
+What made the difference, all applied by `make install`:
 
+- **xHCI interrupt off CPU0.** Every interrupt from the USB controller lands
+  on CPU0, a small core that saturates at 100 % softirq near 1 Gbit/s. The
+  tune script moves it to `TUNE_IRQ_CPU` (default 5, a Cortex-X925 core).
+- **RPS** spreads receive processing over `TUNE_RPS_MASK` (default `3c0`,
+  CPUs 6-9).
+- **32 KiB NTBs.** The Mac offers 32764-byte NTBs but the driver settles on
+  16 KiB; the tune script raises `rx_max`/`tx_max` to `NTB_MAX`.
+- **MTU 8178 on both sides.** On its own a larger MTU made things worse;
+  it pays off only together with 32 KiB NTBs. Set the same MTU on the Mac
+  (see `macos/setup-ip.md`).
+- `txqueuelen 10000` and `netdev_max_backlog`/`netdev_budget` in
+  `/etc/sysctl.d/60-apple-ncm.conf`.
+
+Leave `tx_timer_usecs` at its default (400): 0 lowers GX10 → Mac. Do not add
+`notrack` firewall rules on this interface: with ufw active, untracked
+packets are dropped and the link stops.
+
+Values live in `config/link.conf` and the script runs from udev each time
+the interface appears (`/usr/local/sbin/apple-ncm-tune`).
 ## Safety boundaries
 
 - Read-only scripts (`doctor.sh`, `check-kernel-support.sh`, `verify.sh`)

@@ -31,13 +31,23 @@ gateway/router and no DNS are set on this link.
    route -n get 192.168.20.20
    ```
 
-4. To revert to DHCP (for example, before unplugging or re-testing):
+4. Match the link MTU (`MTU=8178` in `config/link.conf`). Without it, the
+   GX10's 32 KiB NTB tuning loses most of its gain:
+
+   ```sh
+   sudo ifconfig en3 mtu 8178
+   ```
+
+   Or persistently: `networksetup -setMTU en3 8178`. Check with
+   `networksetup -getMTU en3` (valid range 1280-16000).
+
+5. To revert to DHCP (for example, before unplugging or re-testing):
 
    ```sh
    networksetup -setdhcp "<service>"
    ```
 
-5. For bandwidth benchmarks (paired with `tests/bench.sh` on the GX10 side),
+6. For bandwidth benchmarks (paired with `tests/bench.sh` on the GX10 side),
    start an iperf3 server:
 
    ```sh
