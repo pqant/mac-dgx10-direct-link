@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Resolve a usable Python interpreter for later tasks (research/tests, Task 15+).
+# Resolve a usable Python interpreter for research/tests.
 if command -v python3 >/dev/null 2>&1; then
   PYTHON="python3"
 else

@@ -13,9 +13,8 @@ only depends on:
 
 - a model `config.json` (for KV-cache/state size math),
 - a measured link result (`results/<dir>/fwd.json`, produced by
-  `tests/bench.sh`, Task 9),
-- `llama-bench` JSON output from each machine (Task 15 Step 5/6,
-  **[OWNER]**).
+  `tests/bench.sh`),
+- `llama-bench` JSON output from each machine (**[OWNER]**).
 
 Research code is pure Python/bash with no dependency on this
 repository's bash test harness beyond being hooked into
@@ -55,4 +54,4 @@ repository's bash test harness beyond being hooked into
    ```
 
 See [`kv-cache-math.md`](kv-cache-math.md) for the method and the result
-once the owner-gated steps (5 and 6) are complete.
+once the owner-gated benchmark runs are complete.

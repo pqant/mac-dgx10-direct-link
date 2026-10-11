@@ -16,7 +16,7 @@ splitting prefill and decode roles).
   SHA that was never checked out.
 - Python: the version bundled with each machine's existing toolchain
   (record `python3 --version` output from both machines in `results.md`).
-- Model: the same `Qwen3.8-27B` GGUF/weights used for the Task 15/16
+- Model: the same `Qwen3.8-27B` GGUF/weights used for the M7/M8
   llama.cpp runs, at the same quantization on both machines.
 
 ## Procedure
@@ -40,8 +40,8 @@ splitting prefill and decode roles).
    the llama.cpp RPC-split protocol (`README.md` in this directory) and
    record `ttft_ms,tokens_per_s` (or EXO's equivalent metrics, labelled
    accordingly) into `results/research/exo-<date>.csv`.
-5. Return the CSV (or the "not supported" note) for Step 3 of Task 16 to
-   write into `results.md`.
+5. Return the CSV (or the "not supported" note) so it can be written
+   into `results.md`.
 
 ## Notes
 

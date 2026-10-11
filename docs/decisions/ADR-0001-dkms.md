@@ -57,8 +57,7 @@ opposed to cleanly skipping it), switch to Option B: set
 `/etc/kernel/postinst.d/zz-apple-cdc-ncm` /
 `header_postinst.d/zz-apple-cdc-ncm` hooks that call
 `dkms install -m apple-cdc-ncm -v <version> -k <kernelver>` only when
-`lib.sh::kernel_has_quirk <kernelver>` fails. This is tracked as a later
-task (Task 12) and is not implemented until the trigger condition is
+`lib.sh::kernel_has_quirk <kernelver>` fails. This fallback is not implemented until the trigger condition is
 observed.
 
 ## Retirement rule

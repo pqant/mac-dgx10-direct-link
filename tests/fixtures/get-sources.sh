@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Download real drivers/net/usb/cdc_ncm.c sources at known tags into
-# tests/fixtures/cache/<tag>/cdc_ncm.c for the Task 4 real-source tests.
+# tests/fixtures/cache/<tag>/cdc_ncm.c for the real-source tests.
 # Skips files already present. Prints "SKIP <reason>" and exits 0 if offline.
 set -euo pipefail
 

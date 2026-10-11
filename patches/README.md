@@ -13,8 +13,8 @@ repository's own scripts and documentation remain MIT-licensed.
 ## `gen-quirk-patch.sh`
 
 This project does not ship a single static patch.
-Because the target kernel's exact `cdc_ncm.c` varies per-kernel (Task 5 fetches
-the right source for each installed `KVER`), the quirk hunk is generated at
+Because the target kernel's exact `cdc_ncm.c` varies per-kernel (`scripts/fetch-source.sh`
+fetches the right source for each installed `KVER`), the quirk hunk is generated at
 build time by `gen-quirk-patch.sh SRC_C PIDS_FILE`, which prints the patched
 source to stdout.
 

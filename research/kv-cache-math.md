@@ -1,8 +1,8 @@
 # KV-cache and recurrent-state math (M7)
 
-**Status:** partial. Steps 1-4 of Task 15 (tooling + tests) are complete;
-Steps 5-6 (real benchmark numbers and the GO/NO-GO verdict) are
-**[OWNER]**-gated and have not run yet. This document will be completed
+**Status:** partial. The tooling and its tests are complete; the real
+benchmark numbers and the GO/NO-GO verdict require manual **[OWNER]**
+runs on both machines and have not been produced yet. This document will be completed
 (method, verified config values, full table, measured prefill numbers,
 verdict) once the owner returns the two `llama-bench` JSON files.
 
@@ -21,10 +21,10 @@ verdict) once the owner returns the two `llama-bench` JSON files.
    is a small additional term and is excluded here.
 5. Transfer time: `(fp8_kv_bytes + state_bytes) / link_bytes_per_second`,
    where `link_bytes_per_second` comes from `end.sum_received.bits_per_second
-   / 8` in a `tests/bench.sh` `fwd.json` result (Task 9).
+   / 8` in a `tests/bench.sh` `fwd.json` result.
 6. Go/no-go: GO for a context length when
    `prefill_time_gx10 + transfer_time < prefill_time_mac` (measured via
-   `llama-bench`, Task 15 Step 5); an overall verdict of GO is recorded if
+   `llama-bench`); an overall verdict of GO is recorded if
    any tested context is GO.
 
 ## Model config used for the unit-test fixture **[ASSUMPTION - synthetic, not the real model]**
@@ -58,7 +58,7 @@ Not yet available - requires:
   on the GX10) and obtain a `Qwen3.8-27B` GGUF at the same quantization on
   both.
 - **[OWNER]** Run `research/prefill-bench/run.sh` on each machine and
-  return both JSON files, plus a Task 9 `fwd.json` link measurement.
+  return both JSON files, plus a `tests/bench.sh` `fwd.json` link measurement.
 - Then run `kv_math.py` and `go_nogo.py` with the real inputs and replace
   this section with the method, verified config values, table, measured
-  prefill numbers, and a recorded `GO`/`NO-GO` verdict (Task 15 Step 6).
+  prefill numbers, and a recorded `GO`/`NO-GO` verdict.

@@ -1,11 +1,9 @@
 # M8: distributed prefill/decode experiment protocol
 
-**Status:** Step 1 only (tooling scaffold). Task 15 Steps 5-6 (the real
-GO/NO-GO verdict from measured `Qwen3.8-27B` prefill numbers) are
-**[OWNER]**-gated and have not run yet, so this task's own GO/NO-GO branch
-point cannot be evaluated. Per the execution plan, only Step 1 (implement
-and syntax/lint-verify the tooling) is done here; Steps 2-3 (owner runs,
-real CSVs, `results.md` verdict) remain pending.
+**Status:** tooling scaffold only. This experiment is worth running only
+after the M7 prefill research (`../kv-cache-math.md`) records a GO verdict,
+which needs **[OWNER]** benchmark runs that have not happened yet. The
+owner runs, real CSVs, and the `results.md` verdict remain pending.
 
 ## Scope
 
@@ -23,14 +21,14 @@ execution modes across the USB-C link configured by this repository:
    supported; see [`exo.md`](exo.md).
 
 Isolation from the driver: this directory only depends on the link being
-up (`tests/link.sh`, Task 9) and on `llama-cli`/`rpc-server`/EXO being
+up (`tests/link.sh`) and on `llama-cli`/`rpc-server`/EXO being
 installed by the owner; it does not touch `dkms/`, `scripts/`, or
 `system/`.
 
 ## Protocol
 
 For each of 3 prompt lengths (short/medium/long, chosen to match the
-Task 15 contexts where feasible: 8192, 32768, 131072 tokens), run all four
+M7 contexts where feasible: 8192, 32768, 131072 tokens), run all four
 modes and record `ttft_ms,tokens_per_s` per run:
 
 ```bash
@@ -49,8 +47,8 @@ in `exo.md` and record their own CSV in the same directory.
 
 ## Pending
 
-- **[OWNER]** Step 2: run the 3 prompt lengths × 4 modes and return the
+- **[OWNER]** Run the 3 prompt lengths × 4 modes and return the
   resulting CSVs.
-- Step 3: once the CSVs exist, write `results.md` with the comparison
+- Once the CSVs exist, write `results.md` with the comparison
   table and an honest verdict (including an explicit "EXO: not supported"
   outcome if that procedure fails).

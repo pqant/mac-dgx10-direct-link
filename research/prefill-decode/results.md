@@ -1,12 +1,11 @@
 # M8 results
 
-**Status:** pending. This file is a placeholder written during Task 16
-Step 1 (tooling scaffold only). It will be replaced with the real
+**Status:** pending. This file is a placeholder. It will be replaced with the real
 comparison table and verdict once:
 
-- Task 15 Steps 5-6 (**[OWNER]**) have produced a GO verdict for at least
-  one context length, and
-- Task 16 Step 2 (**[OWNER]**) has returned the 3-prompt-length × 4-mode
+- the M7 prefill research (`../kv-cache-math.md`, **[OWNER]** runs) has
+  produced a GO verdict for at least one context length, and
+- the **[OWNER]** runs have returned the 3-prompt-length × 4-mode
   CSVs (Mac alone, GX10 alone, RPC split, EXO split) described in
   `README.md` and `exo.md`.
 
