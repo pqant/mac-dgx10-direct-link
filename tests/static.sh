@@ -31,4 +31,15 @@ else
   fi
 fi
 
+# 3. Every tracked *.sh except sourced libraries must be committed executable.
+while read -r mode _ _ path; do
+  case "$path" in
+    scripts/lib.sh|tests/lib/*) continue ;;
+  esac
+  if [ "$mode" != "100755" ]; then
+    echo "not executable in git (mode $mode): $path" >&2
+    status=1
+  fi
+done < <(git ls-files -s -- '*.sh')
+
 exit "$status"
