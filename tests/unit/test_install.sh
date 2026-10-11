@@ -166,6 +166,9 @@ test_install_renders_files() {
   assert_not_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "nameservers"
   assert_contains "$(cat "$root/etc/udev/rules.d/90-apple-ncm.rules")" 'NAME="macncm0"'
   assert_contains "$(cat "$root/etc/udev/rules.d/90-apple-ncm.rules")" 'NAME="macncm2"'
+  # DRIVERS + ATTRS would need one parent to match both, which never happens.
+  assert_not_contains "$(cat "$root/etc/udev/rules.d/90-apple-ncm.rules")" 'DRIVERS=='
+  assert_contains "$(cat "$root/etc/udev/rules.d/90-apple-ncm.rules")" '/sys/bus/usb/drivers/cdc_ncm/bind'
 }
 
 test_install_idempotent() {

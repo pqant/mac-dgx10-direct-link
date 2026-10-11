@@ -1,2 +1,6 @@
-SUBSYSTEM=="net", ACTION=="add", DRIVERS=="cdc_ncm", ATTRS{idVendor}=="05ac", ENV{ID_USB_INTERFACE_NUM}=="00", NAME="@PREFIX@0"
-SUBSYSTEM=="net", ACTION=="add", DRIVERS=="cdc_ncm", ATTRS{idVendor}=="05ac", ENV{ID_USB_INTERFACE_NUM}=="02", NAME="@PREFIX@2"
+# The Mac's NCM function is often not ready when it enumerates, so the first
+# cdc_ncm probe fails with "bind() failure". Retry the bind for a short while.
+ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_interface", ATTRS{idVendor}=="05ac", ATTR{bInterfaceClass}=="02", ATTR{bInterfaceSubClass}=="0d", RUN+="/usr/bin/systemd-run --no-block --collect /bin/sh -c 'for i in 1 2 3 4 5 6 7 8 9 10; do sleep 2; [ -e /sys%p/driver ] && exit 0; echo %k > /sys/bus/usb/drivers/cdc_ncm/bind; done'"
+# DRIVERS and ATTRS must match one parent device, so match the net driver via ENV.
+SUBSYSTEM=="net", ACTION=="add", ENV{ID_NET_DRIVER}=="cdc_ncm", ATTRS{idVendor}=="05ac", ENV{ID_USB_INTERFACE_NUM}=="00", NAME="@PREFIX@0"
+SUBSYSTEM=="net", ACTION=="add", ENV{ID_NET_DRIVER}=="cdc_ncm", ATTRS{idVendor}=="05ac", ENV{ID_USB_INTERFACE_NUM}=="02", NAME="@PREFIX@2"
