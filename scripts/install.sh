@@ -209,7 +209,7 @@ render_template "$repo_root/system/grub/apple-ncm.cfg" \
   "@QUIRKS@" "$quirks"
 render_template "$repo_root/system/udev/90-apple-ncm.rules" \
   "$MGDL_ROOT/etc/udev/rules.d/90-apple-ncm.rules" \
-  "@PREFIX@" "$IFACE_PREFIX"
+  "@PREFIX@" "$IFACE_PREFIX" "@IFNUM@" "$(printf '%02d' "$IFACE_NUM")"
 render_template "$repo_root/system/netplan/60-apple-ncm.yaml" \
   "$MGDL_ROOT/etc/netplan/60-apple-ncm.yaml" \
   "@IFACE@" "$iface" "@GX10_HOST@" "${GX10_IP%%/*}" "@MAC_HOST@" "${MAC_IP%%/*}" "@MTU@" "$MTU"

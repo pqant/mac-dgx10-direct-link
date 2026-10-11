@@ -174,6 +174,7 @@ test_install_renders_files() {
   # DRIVERS + ATTRS would need one parent to match both, which never happens.
   assert_not_contains "$(cat "$root/etc/udev/rules.d/90-apple-ncm.rules")" 'DRIVERS=='
   assert_contains "$(cat "$root/etc/udev/rules.d/90-apple-ncm.rules")" '/sys/bus/usb/drivers/cdc_ncm/bind'
+  assert_contains "$(cat "$root/etc/udev/rules.d/90-apple-ncm.rules")" 'ENV{ID_USB_INTERFACE_NUM}!="00", ENV{NM_UNMANAGED}="1"'
 }
 
 test_install_idempotent() {

@@ -4,3 +4,7 @@ ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_interface", ATTRS{idVendor}=
 # DRIVERS and ATTRS must match one parent device, so match the net driver via ENV.
 SUBSYSTEM=="net", ACTION=="add", ENV{ID_NET_DRIVER}=="cdc_ncm", ATTRS{idVendor}=="05ac", ENV{ID_USB_INTERFACE_NUM}=="00", NAME="@PREFIX@0"
 SUBSYSTEM=="net", ACTION=="add", ENV{ID_NET_DRIVER}=="cdc_ncm", ATTRS{idVendor}=="05ac", ENV{ID_USB_INTERFACE_NUM}=="02", NAME="@PREFIX@2"
+# The Mac exposes two NCM functions; only the configured one carries the link.
+# Keep NetworkManager off the other so it does not loop on DHCP and raise
+# "Activation of network connection failed" every 45 seconds.
+SUBSYSTEM=="net", ACTION=="add", ENV{ID_NET_DRIVER}=="cdc_ncm", ATTRS{idVendor}=="05ac", ENV{ID_USB_INTERFACE_NUM}!="@IFNUM@", ENV{NM_UNMANAGED}="1"
