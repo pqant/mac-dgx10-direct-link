@@ -48,6 +48,30 @@ See [`macos/setup-ip.md`](macos/setup-ip.md) for the Mac-side static IP steps.
   drop-in, udev rule, netplan file, depmod override) and leaves no
   `updates/dkms/cdc_ncm*`.
 
+## Measured performance
+
+First measurement on the USB-C link, before any tuning (MTU 1500, default
+`cdc_ncm` buffers). Hardware: MacBook Pro M5 Max (macOS 27) and ASUS Ascent
+GX10 (DGX OS, kernel 7.0). TCP throughput comes from a memory-to-memory socket
+test with 10 s runs; `iperf3` was not installed on either side.
+
+| Direction | 1 stream | 4 streams | 8 streams |
+|---|---|---|---|
+| Mac → GX10 | 0.98 Gbit/s | 0.94 Gbit/s | 0.94 Gbit/s |
+| GX10 → Mac | 1.16 Gbit/s | 0.83 Gbit/s | 0.76 Gbit/s |
+
+| Metric | Value |
+|---|---|
+| RTT (50 pings) | min 1.87 / avg 2.52 / max 3.11 ms, 0 % loss |
+| USB negotiated speed | 10 Gbit/s (USB 3.2 Gen 2) |
+| Same test over loopback | 36 Gbit/s, so the tool is not the bottleneck |
+
+The link currently delivers about 1 Gbit/s, roughly 10 % of the USB bus rate.
+Likely limits: the NTB buffers settle at 16 KiB although the device offers
+32 KiB, the GX10 side runs MTU 1500 while the Mac uses 8178, and the GX10
+interface shows dropped RX packets. Tuning these is the next step; results
+will be added here.
+
 ## Safety boundaries
 
 - Read-only scripts (`doctor.sh`, `check-kernel-support.sh`, `verify.sh`)
