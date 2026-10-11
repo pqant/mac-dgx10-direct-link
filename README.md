@@ -59,3 +59,8 @@ See [`macos/setup-ip.md`](macos/setup-ip.md) for the Mac-side static IP steps.
 - All scripts use `set -euo pipefail`, are shellcheck clean, and never
   hard-code a kernel version.
 - This project does not touch Wi-Fi/Ethernet routing, DNS, or provide DHCP.
+
+## License
+
+This project is released under the [MIT License](LICENSE).
+The kernel patch under `patches/` follows its upstream Linux license; see [`NOTICE.md`](NOTICE.md).
