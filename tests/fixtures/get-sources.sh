@@ -22,6 +22,7 @@ for tag in "${tags[@]}"; do
     continue
   fi
   mkdir -p "$dest_dir"
+  # shellcheck disable=SC2059 # the template is a printf format with one %s
   url="$(printf "$url_template" "$tag")"
   if ! curl -fsSL "$url" -o "$dest_file.tmp"; then
     rm -f "$dest_file.tmp"

@@ -1,0 +1,2 @@
+# Sourced files are resolved at runtime via $(dirname "$0"); shellcheck cannot follow them.
+disable=SC1091

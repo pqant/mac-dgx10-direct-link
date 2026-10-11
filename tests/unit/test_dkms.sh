@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2030,SC2031,SC2034 # PATH is scoped to subshells on purpose; MGDL_* vars are read by the sourced lib.sh
 set -euo pipefail
 
 # shellcheck source=../lib/assert.sh

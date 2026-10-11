@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2034 # MGDL_* vars are read by the sourced lib.sh
 set -euo pipefail
 
 # shellcheck source=../lib/assert.sh

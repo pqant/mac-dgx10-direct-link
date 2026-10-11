@@ -45,7 +45,7 @@ test_sections_in_order() {
 
   out="$(PATH="$stub_dir:$PATH" MGDL_ROOT="$root_dir" MGDL_VERSION_SIGNATURE="$sig_file" bash "$script_under_test")"
 
-  local headers expected order_ok
+  local headers expected
   headers="$(grep -E '^## ' <<<"$out")"
   expected=$'## kernel\n## secureboot\n## dkms\n## grub\n## kernel-source-package\n## deb-src\n## cdc_ncm\n## usb\n## apple-interfaces\n## lan\n## ssh'
   assert_eq "$expected" "$headers" "section headers must appear in the required order"

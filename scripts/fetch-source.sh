@@ -153,6 +153,7 @@ __try_upstream_stable() {
 
   version="$(upstream_version "$kver")" || return 1
   tag="$(stable_tag "$version")"
+  # shellcheck disable=SC2059 # the template is a printf format with one %s
   url="$(printf -- "$MGDL_STABLE_URL_TEMPLATE" "${tag#v}")"
 
   command -v curl >/dev/null 2>&1 || return 1
@@ -173,7 +174,8 @@ __try_upstream_stable() {
 }
 
 fetch_one() {
-  local kver="$1" dest_dir="$MGDL_STATE_DIR/src/$kver"
+  local kver="$1"
+  local dest_dir="$MGDL_STATE_DIR/src/$kver"
   mkdir -p "$dest_dir"
 
   if __try_cache "$kver" "$dest_dir"; then

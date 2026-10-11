@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2016 # stub bodies are single-quoted on purpose
 set -euo pipefail
 
 # Ensure `ln -s` creates real symlinks (not Windows junctions) on Git Bash
