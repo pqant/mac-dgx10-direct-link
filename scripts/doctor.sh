@@ -57,7 +57,7 @@ while IFS= read -r line; do
   if grep -qx "$pid" <<<"$configured_pids"; then
     pass "PID 05ac:$pid in config/pids.conf"
   else
-    fail "PID 05ac:$pid not in config/pids.conf — add it and rerun make install"
+    fail "PID 05ac:$pid not in config/pids.conf - add it and rerun make install"
   fi
 done <<<"$apple_lines"
 if [ "$other_pid_count" -eq 0 ]; then

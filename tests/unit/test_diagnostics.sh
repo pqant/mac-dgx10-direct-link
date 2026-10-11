@@ -292,7 +292,7 @@ test_doctor_lpm_quirk_checks_all_configured_pids() {
   ln -s "$root/sys/bus/usb/drivers/cdc_ncm" "$root/sys/class/net/macncm0/device/driver"
 
   # M8: config/pids.conf has both 1905 and 1902, but the usbcore quirks
-  # mask only carries 1905 — the per-PID check must catch the missing 1902.
+  # mask only carries 1905 - the per-PID check must catch the missing 1902.
   mkdir -p "$(dirname "$root/sys/module/usbcore/parameters/quirks")"
   printf '05ac:1905:k' >"$root/sys/module/usbcore/parameters/quirks"
 
@@ -336,7 +336,7 @@ test_verify_cmdline_checks_all_configured_pids() {
   mkdir -p "$grub_dir"
   : >"$grub_dir/apple-ncm.cfg"
   # M8: config/pids.conf has both 1905 and 1902, but the kernel cmdline
-  # only carries the 1905 quirk — the check must catch the missing 1902.
+  # only carries the 1905 quirk - the check must catch the missing 1902.
   printf 'BOOT_IMAGE=/vmlinuz usbcore.quirks=05ac:1905:k root=/dev/sda1\n' >"$cmdline_file"
 
   mk_stub "$stub_dir" uname 'echo "A"'

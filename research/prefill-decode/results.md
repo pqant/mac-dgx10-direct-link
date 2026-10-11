@@ -4,7 +4,7 @@
 Step 1 (tooling scaffold only). It will be replaced with the real
 comparison table and verdict once:
 
-- Task 15 Steps 5–6 (**[OWNER]**) have produced a GO verdict for at least
+- Task 15 Steps 5-6 (**[OWNER]**) have produced a GO verdict for at least
   one context length, and
 - Task 16 Step 2 (**[OWNER]**) has returned the 3-prompt-length × 4-mode
   CSVs (Mac alone, GX10 alone, RPC split, EXO split) described in

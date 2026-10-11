@@ -1,10 +1,10 @@
 # M8: distributed prefill/decode experiment protocol
 
-**Status:** Step 1 only (tooling scaffold). Task 15 Steps 5–6 (the real
+**Status:** Step 1 only (tooling scaffold). Task 15 Steps 5-6 (the real
 GO/NO-GO verdict from measured `Qwen3.8-27B` prefill numbers) are
 **[OWNER]**-gated and have not run yet, so this task's own GO/NO-GO branch
 point cannot be evaluated. Per the execution plan, only Step 1 (implement
-and syntax/lint-verify the tooling) is done here; Steps 2–3 (owner runs,
+and syntax/lint-verify the tooling) is done here; Steps 2-3 (owner runs,
 real CSVs, `results.md` verdict) remain pending.
 
 ## Scope
@@ -12,14 +12,14 @@ real CSVs, `results.md` verdict) remain pending.
 Compares, for the same `Qwen3.8-27B` model and the same prompts, four
 execution modes across the USB-C link configured by this repository:
 
-1. **Mac alone** — `llamacpp-rpc.sh local` on the Mac (single-device
+1. **Mac alone** - `llamacpp-rpc.sh local` on the Mac (single-device
    baseline, no GX10 involvement).
-2. **GX10 alone** — `llamacpp-rpc.sh local` on the GX10 (single-device
+2. **GX10 alone** - `llamacpp-rpc.sh local` on the GX10 (single-device
    baseline, no Mac involvement).
-3. **RPC split** — `llamacpp-rpc.sh server` on the GX10, `llamacpp-rpc.sh
+3. **RPC split** - `llamacpp-rpc.sh server` on the GX10, `llamacpp-rpc.sh
    client` on the Mac, using llama.cpp's built-in `rpc-server`/`--rpc`
    backend split over the USB-C link.
-4. **EXO split** — a prefill(GX10)/decode(Mac) split via EXO, if
+4. **EXO split** - a prefill(GX10)/decode(Mac) split via EXO, if
    supported; see [`exo.md`](exo.md).
 
 Isolation from the driver: this directory only depends on the link being

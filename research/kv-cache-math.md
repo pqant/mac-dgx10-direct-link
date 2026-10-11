@@ -1,7 +1,7 @@
 # KV-cache and recurrent-state math (M7)
 
-**Status:** partial. Steps 1–4 of Task 15 (tooling + tests) are complete;
-Steps 5–6 (real benchmark numbers and the GO/NO-GO verdict) are
+**Status:** partial. Steps 1-4 of Task 15 (tooling + tests) are complete;
+Steps 5-6 (real benchmark numbers and the GO/NO-GO verdict) are
 **[OWNER]**-gated and have not run yet. This document will be completed
 (method, verified config values, full table, measured prefill numbers,
 verdict) once the owner returns the two `llama-bench` JSON files.
@@ -27,7 +27,7 @@ verdict) once the owner returns the two `llama-bench` JSON files.
    `llama-bench`, Task 15 Step 5); an overall verdict of GO is recorded if
    any tested context is GO.
 
-## Model config used for the unit-test fixture **[ASSUMPTION — synthetic, not the real model]**
+## Model config used for the unit-test fixture **[ASSUMPTION - synthetic, not the real model]**
 
 The test fixture in `research/tests/test_kv_math.py` uses representative,
 round numbers to exercise the formulas, not `Qwen/Qwen3.8-27B`'s real
@@ -48,7 +48,7 @@ Derived: `full_layers=16`, `kv_bf16_per_token=65536 B`,
 
 ## Pending: verified config, measured prefill, and verdict
 
-Not yet available — requires:
+Not yet available - requires:
 
 - **[OWNER]** Download
   `https://huggingface.co/Qwen/Qwen3.8-27B/resolve/main/config.json` to

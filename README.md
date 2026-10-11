@@ -41,12 +41,12 @@ See [`macos/setup-ip.md`](macos/setup-ip.md) for the Mac-side static IP steps.
 
 ## Everyday commands
 
-- `make verify` — per-kernel table: in-tree quirk status, DKMS status,
+- `make verify` - per-kernel table: in-tree quirk status, DKMS status,
   effective module path, alias count. Add `--all-kernels` for every
   installed kernel, not just the running one.
-- `make bench` — runs `iperf3` in both directions and records JSON results
+- `make bench` - runs `iperf3` in both directions and records JSON results
   plus ping RTT and metadata under `results/`.
-- `sudo make uninstall` — reverses every install step (DKMS removal, GRUB
+- `sudo make uninstall` - reverses every install step (DKMS removal, GRUB
   drop-in, udev rule, netplan file, depmod override) and leaves no
   `updates/dkms/cdc_ncm*`.
 
