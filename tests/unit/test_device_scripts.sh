@@ -52,6 +52,7 @@ test_net_up_apply_uses_addr_replace() {
   MGDL_ROOT="$root" PATH="$stub_dir:$PATH" bash "$repo/scripts/net-up.sh" --apply >/dev/null
   out="$(cat "$root/calls.log")"
   assert_contains "$out" "ip addr replace 192.168.20.20/24 dev macncm0"
+  assert_contains "$out" "ip route replace 192.168.20.17/32 dev macncm0 scope link"
   assert_not_contains "$out" "ip addr add"
 }
 

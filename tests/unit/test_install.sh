@@ -162,7 +162,10 @@ test_install_renders_files() {
     "usbcore.quirks=05ac:1905:k,05ac:1902:k"
   assert_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "192.168.20.20/24"
   assert_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "macncm0"
-  assert_not_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "routes"
+  # Only a host route to the Mac: never a default route or gateway.
+  assert_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "routes: [{to: 192.168.20.17/32, scope: link}]"
+  assert_not_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "default"
+  assert_not_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "via"
   assert_not_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "nameservers"
   assert_contains "$(cat "$root/etc/udev/rules.d/90-apple-ncm.rules")" 'NAME="macncm0"'
   assert_contains "$(cat "$root/etc/udev/rules.d/90-apple-ncm.rules")" 'NAME="macncm2"'

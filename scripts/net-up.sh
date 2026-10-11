@@ -69,11 +69,15 @@ run_or_print() {
   fi
 }
 
+# A /32 host route wins over a LAN that shares the link's /24.
+mac_host="${MAC_IP%%/*}/32"
 if [ "$down" -eq 1 ]; then
+  run_or_print ip route del "$mac_host" dev "$iface"
   run_or_print ip addr del "$GX10_IP" dev "$iface"
 else
   run_or_print ip addr replace "$GX10_IP" dev "$iface"
   run_or_print ip link set "$iface" up
+  run_or_print ip route replace "$mac_host" dev "$iface" scope link
 fi
 
 if [ "$apply" -eq 0 ]; then
