@@ -15,7 +15,8 @@ __repo_env() {
   local tmp
   tmp="$(mk_tmp)"
   mkdir -p "$tmp/scripts" "$tmp/config" "$tmp/dkms" "$tmp/patches" \
-    "$tmp/system/grub" "$tmp/system/udev" "$tmp/system/netplan" "$tmp/system/depmod.d"
+    "$tmp/system/grub" "$tmp/system/udev" "$tmp/system/netplan" "$tmp/system/depmod.d" \
+    "$tmp/system/tune" "$tmp/system/sysctl"
   cp "$root_dir/scripts/lib.sh" "$tmp/scripts/lib.sh"
   cp "$root_dir/scripts/install.sh" "$tmp/scripts/install.sh"
   cp "$root_dir/scripts/uninstall.sh" "$tmp/scripts/uninstall.sh"
@@ -31,6 +32,8 @@ __repo_env() {
   cp "$root_dir/system/udev/90-apple-ncm.rules" "$tmp/system/udev/90-apple-ncm.rules"
   cp "$root_dir/system/netplan/60-apple-ncm.yaml" "$tmp/system/netplan/60-apple-ncm.yaml"
   cp "$root_dir/system/depmod.d/apple-ncm.conf" "$tmp/system/depmod.d/apple-ncm.conf"
+  cp "$root_dir/system/tune/apple-ncm-tune" "$tmp/system/tune/apple-ncm-tune"
+  cp "$root_dir/system/sysctl/60-apple-ncm.conf" "$tmp/system/sysctl/60-apple-ncm.conf"
   echo "$tmp"
 }
 
@@ -108,6 +111,7 @@ esac
   mk_stub "$dir" udevadm 'echo "udevadm $*" >>"$MGDL_ROOT/calls.log"'
   mk_stub "$dir" netplan 'echo "netplan $*" >>"$MGDL_ROOT/calls.log"'
   mk_stub "$dir" nmcli 'echo "nmcli $*" >>"$MGDL_ROOT/calls.log"'
+  mk_stub "$dir" sysctl 'echo "sysctl $*" >>"$MGDL_ROOT/calls.log"'
   mk_stub "$dir" mokutil '
 echo "mokutil $*" >>"$MGDL_ROOT/calls.log"
 case "$1" in
@@ -178,6 +182,15 @@ test_install_renders_files() {
   assert_contains "$(cat "$root/etc/udev/rules.d/90-apple-ncm.rules")" 'ENV{ID_USB_INTERFACE_NUM}!="00", ENV{NM_UNMANAGED}="1"'
   # Without a reload, a running NetworkManager keeps the old link address.
   assert_contains "$(cat "$root/calls.log")" "nmcli connection reload"
+  assert_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "mtu: 8178"
+  # Tuning: the udev rule runs the rendered tune script for the link interface.
+  assert_contains "$(cat "$root/etc/udev/rules.d/90-apple-ncm.rules")" 'ENV{ID_USB_INTERFACE_NUM}=="00", RUN+="/usr/bin/systemd-run --no-block --collect /usr/local/sbin/apple-ncm-tune"'
+  assert_eq "yes" "$([ -x "$root/usr/local/sbin/apple-ncm-tune" ] && echo yes || echo no)"
+  assert_contains "$(cat "$root/usr/local/sbin/apple-ncm-tune")" "IF=macncm0"
+  assert_contains "$(cat "$root/usr/local/sbin/apple-ncm-tune")" "NTB_MAX=32764"
+  assert_not_contains "$(cat "$root/usr/local/sbin/apple-ncm-tune")" "@"
+  assert_contains "$(cat "$root/etc/sysctl.d/60-apple-ncm.conf")" "net.core.netdev_max_backlog = 10000"
+  assert_contains "$(cat "$root/calls.log")" "sysctl -q -p $root/etc/sysctl.d/60-apple-ncm.conf"
 }
 
 test_install_idempotent() {
@@ -341,6 +354,8 @@ test_uninstall_removes_all() {
   assert_file_absent "$root/etc/udev/rules.d/90-apple-ncm.rules"
   assert_file_absent "$root/etc/netplan/60-apple-ncm.yaml"
   assert_file_absent "$root/etc/depmod.d/apple-ncm.conf"
+  assert_file_absent "$root/usr/local/sbin/apple-ncm-tune"
+  assert_file_absent "$root/etc/sysctl.d/60-apple-ncm.conf"
   assert_file_absent "$root/usr/src/apple-cdc-ncm-1.0.0"
   assert_contains "$(cat "$root/calls.log")" "dkms remove apple-cdc-ncm/1.0.0 --all"
 }

@@ -69,6 +69,8 @@ run_cmd rm -f "$MGDL_ROOT/etc/default/grub.d/apple-ncm.cfg"
 run_cmd rm -f "$MGDL_ROOT/etc/udev/rules.d/90-apple-ncm.rules"
 run_cmd rm -f "$MGDL_ROOT/etc/netplan/60-apple-ncm.yaml"
 run_cmd rm -f "$MGDL_ROOT/etc/depmod.d/apple-ncm.conf"
+run_cmd rm -f "$MGDL_ROOT/usr/local/sbin/apple-ncm-tune"
+run_cmd rm -f "$MGDL_ROOT/etc/sysctl.d/60-apple-ncm.conf"
 
 if [ "$purge" -eq 1 ]; then
   run_cmd rm -rf "$MGDL_STATE_DIR"

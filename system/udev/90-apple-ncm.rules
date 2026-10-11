@@ -8,3 +8,5 @@ SUBSYSTEM=="net", ACTION=="add", ENV{ID_NET_DRIVER}=="cdc_ncm", ATTRS{idVendor}=
 # Keep NetworkManager off the other so it does not loop on DHCP and raise
 # "Activation of network connection failed" every 45 seconds.
 SUBSYSTEM=="net", ACTION=="add", ENV{ID_NET_DRIVER}=="cdc_ncm", ATTRS{idVendor}=="05ac", ENV{ID_USB_INTERFACE_NUM}!="@IFNUM@", ENV{NM_UNMANAGED}="1"
+# Throughput tuning (xHCI IRQ off CPU0, RPS, 32 KiB NTBs); see README.
+SUBSYSTEM=="net", ACTION=="add", ENV{ID_NET_DRIVER}=="cdc_ncm", ATTRS{idVendor}=="05ac", ENV{ID_USB_INTERFACE_NUM}=="@IFNUM@", RUN+="/usr/bin/systemd-run --no-block --collect /usr/local/sbin/apple-ncm-tune"

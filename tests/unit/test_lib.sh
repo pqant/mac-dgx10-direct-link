@@ -41,6 +41,21 @@ test_load_link_conf_crlf() {
   assert_exit 64 load_link_conf "$bad"
 }
 
+test_load_link_conf_tuning() {
+  local tmp conf
+  tmp="$(mk_tmp)"
+  conf="$tmp/link.conf"
+  printf 'GX10_IP=192.168.20.20/24\nMAC_IP=192.168.20.17/24\nMTU=8178\nIFACE_NUM=0\nIFACE_PREFIX=macncm\n' >"$conf"
+  unset TUNE_IRQ_CPU TUNE_RPS_MASK NTB_MAX TXQLEN
+  load_link_conf "$conf"
+  assert_eq "5|3c0|32764|10000" "$TUNE_IRQ_CPU|$TUNE_RPS_MASK|$NTB_MAX|$TXQLEN"
+
+  printf 'GX10_IP=192.168.20.20/24\nMAC_IP=192.168.20.17/24\nMTU=20000\nIFACE_NUM=0\n' >"$conf"
+  assert_exit 64 load_link_conf "$conf"
+  printf 'GX10_IP=192.168.20.20/24\nMAC_IP=192.168.20.17/24\nMTU=8178\nIFACE_NUM=0\nTUNE_RPS_MASK=xyz\n' >"$conf"
+  assert_exit 64 load_link_conf "$conf"
+}
+
 test_kernel_has_quirk_present() {
   local tmp stub_dir mods_dir kver
   tmp="$(mk_tmp)"

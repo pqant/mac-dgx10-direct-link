@@ -1,0 +1,36 @@
+#!/bin/sh
+# Throughput tuning for the Apple NCM link, run by udev when the interface
+# appears. Values are rendered from config/link.conf by install.sh.
+IF=@IFACE@
+IRQ_CPU=@IRQ_CPU@
+RPS_MASK=@RPS_MASK@
+NTB_MAX=@NTB_MAX@
+TXQLEN=@TXQLEN@
+
+net=/sys/class/net/$IF
+i=0
+while [ ! -d "$net/cdc_ncm" ]; do
+  i=$((i + 1))
+  [ "$i" -gt 20 ] && exit 0
+  sleep 1
+done
+
+# Larger NTBs pack more frames per USB transfer; the Mac accepts up to 32 KiB.
+echo "$NTB_MAX" >"$net/cdc_ncm/rx_max" 2>/dev/null
+echo "$NTB_MAX" >"$net/cdc_ncm/tx_max" 2>/dev/null
+echo "$RPS_MASK" >"$net/queues/rx-0/rps_cpus" 2>/dev/null
+ip link set dev "$IF" txqueuelen "$TXQLEN" 2>/dev/null
+
+# By default every xHCI interrupt lands on CPU0, a small core that saturates
+# near 1 Gbit/s. The IRQ is named after the controller's first root hub.
+d=$(readlink -f "$net/device")
+while [ -n "$d" ] && [ "$d" != "/" ]; do
+  case "${d##*/}" in usb[0-9]*) break ;; esac
+  d=${d%/*}
+done
+[ -z "$d" ] || [ "$d" = "/" ] && exit 0
+for bus in "${d%/*}"/usb[0-9]*; do
+  irq=$(awk -v n="xhci-hcd:${bus##*/}" '$NF == n { sub(":", "", $1); print $1 }' /proc/interrupts)
+  [ -n "$irq" ] && echo "$IRQ_CPU" >"/proc/irq/$irq/smp_affinity_list" 2>/dev/null
+done
+exit 0

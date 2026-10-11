@@ -101,6 +101,32 @@ load_link_conf() {
     log_error "invalid IFACE_NUM '${IFACE_NUM:-}' in $file"
     return 64
   fi
+  if [[ ! "${MTU:-}" =~ ^[0-9]+$ ]] || [ "$MTU" -lt 1280 ] || [ "$MTU" -gt 16000 ]; then
+    log_error "invalid MTU '${MTU:-}' in $file (1280-16000)"
+    return 64
+  fi
+
+  # Tuning keys are optional; older link.conf files get the measured defaults.
+  TUNE_IRQ_CPU="${TUNE_IRQ_CPU:-5}"
+  TUNE_RPS_MASK="${TUNE_RPS_MASK:-3c0}"
+  NTB_MAX="${NTB_MAX:-32764}"
+  TXQLEN="${TXQLEN:-10000}"
+  if [[ ! "$TUNE_IRQ_CPU" =~ ^[0-9]+$ ]]; then
+    log_error "invalid TUNE_IRQ_CPU '$TUNE_IRQ_CPU' in $file"
+    return 64
+  fi
+  if [[ ! "$TUNE_RPS_MASK" =~ ^[0-9a-fA-F,]+$ ]]; then
+    log_error "invalid TUNE_RPS_MASK '$TUNE_RPS_MASK' in $file"
+    return 64
+  fi
+  if [[ ! "$NTB_MAX" =~ ^[0-9]+$ ]] || [ "$NTB_MAX" -lt 2048 ] || [ "$NTB_MAX" -gt 65536 ]; then
+    log_error "invalid NTB_MAX '$NTB_MAX' in $file (2048-65536)"
+    return 64
+  fi
+  if [[ ! "$TXQLEN" =~ ^[0-9]+$ ]]; then
+    log_error "invalid TXQLEN '$TXQLEN' in $file"
+    return 64
+  fi
 }
 
 # intree_cdc_ncm KVER - prints the path to the first in-tree cdc_ncm module

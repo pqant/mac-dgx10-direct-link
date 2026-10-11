@@ -213,9 +213,20 @@ render_template "$repo_root/system/udev/90-apple-ncm.rules" \
 render_template "$repo_root/system/netplan/60-apple-ncm.yaml" \
   "$MGDL_ROOT/etc/netplan/60-apple-ncm.yaml" \
   "@IFACE@" "$iface" "@GX10_HOST@" "${GX10_IP%%/*}" "@MAC_HOST@" "${MAC_IP%%/*}" "@MTU@" "$MTU"
+render_template "$repo_root/system/tune/apple-ncm-tune" \
+  "$MGDL_ROOT/usr/local/sbin/apple-ncm-tune" \
+  "@IFACE@" "$iface" "@IRQ_CPU@" "$TUNE_IRQ_CPU" "@RPS_MASK@" "$TUNE_RPS_MASK" \
+  "@NTB_MAX@" "$NTB_MAX" "@TXQLEN@" "$TXQLEN"
+run_cmd chmod 755 "$MGDL_ROOT/usr/local/sbin/apple-ncm-tune"
+render_template "$repo_root/system/sysctl/60-apple-ncm.conf" \
+  "$MGDL_ROOT/etc/sysctl.d/60-apple-ncm.conf"
+run_cmd chmod 644 "$MGDL_ROOT/etc/sysctl.d/60-apple-ncm.conf"
 
 run_cmd update-grub
 run_cmd udevadm control --reload
+if command -v sysctl >/dev/null 2>&1; then
+  run_cmd sysctl -q -p "$MGDL_ROOT/etc/sysctl.d/60-apple-ncm.conf" || log_warn "sysctl could not apply 60-apple-ncm.conf"
+fi
 if ! run_cmd netplan generate; then
   log_error "netplan generate failed; fix the file named above, then rerun: sudo make install"
   exit 1
