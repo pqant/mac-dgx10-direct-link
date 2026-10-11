@@ -20,8 +20,8 @@ gateway/router and no DNS are set on this link.
 
    No extra route is needed: `192.168.20.0/24` is used only by this cable,
    so it never overlaps the LAN. Avoid `10.x` for this link: VPN or
-   zero-trust clients may
-   capture `10.x` traffic before it reaches the cable.
+   zero-trust clients may capture `10.x` traffic before it reaches the
+   cable.
 
 3. Verify the address and route took effect (`en3` is the cable interface
    whose `status` is `active`):

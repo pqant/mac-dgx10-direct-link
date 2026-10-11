@@ -14,14 +14,13 @@ GX10, decode on Mac).
 
 ## IP plan
 
-| Link | Mac side | GX10 side | Notes |
-|---|---|---|---|
-| **USB-C (new, static)** | **M5 Max 192.168.20.17/24** | **GX10 192.168.20.20/24** | This project |
+| Link | Mac side | GX10 side |
+|---|---|---|
+| USB-C (static) | M5 Max 192.168.20.17/24 | GX10 192.168.20.20/24 |
 
-**Owner decision:** use `192.168.20.17` (Mac) and `192.168.20.20` (GX10) with mask
-`255.255.255.0`. No hostnames are added. The link uses its own subnet, so it
-never overlaps the LAN (`172.16.0.0/24`), and it avoids `10.x`, which VPN
-or zero-trust clients on the Mac may capture. Detection: `tests/link.sh`
+No gateway, DNS, or hostnames are set on this link. It uses its own subnet,
+so it never overlaps the LAN, and it avoids `10.x`, which VPN or zero-trust
+clients on the Mac may capture. Detection: `tests/link.sh`
 fails if `ip route get 192.168.20.17` does not resolve to the USB interface,
 and `bench.sh` records the egress interface with each result.
 
