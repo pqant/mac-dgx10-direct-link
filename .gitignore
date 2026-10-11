@@ -9,3 +9,5 @@ __pycache__/
 *.pyc
 .superpowers/
 docs/superpowers/
+/before.txt
+/after.txt
