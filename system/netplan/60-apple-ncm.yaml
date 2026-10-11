@@ -1,1 +1,1 @@
-network: {version: 2, ethernets: {@IFACE@: {addresses: [@GX10_IP@], routes: [{to: @MAC_HOST@/32, scope: link}], mtu: @MTU@, dhcp4: false, dhcp6: false, link-local: [], optional: true}}}
+network: {version: 2, ethernets: {@IFACE@: {addresses: [@GX10_HOST@/32], routes: [{to: @MAC_HOST@/32, scope: link}], mtu: @MTU@, dhcp4: false, dhcp6: false, link-local: [], optional: true}}}

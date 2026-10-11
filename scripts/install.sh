@@ -212,7 +212,7 @@ render_template "$repo_root/system/udev/90-apple-ncm.rules" \
   "@PREFIX@" "$IFACE_PREFIX"
 render_template "$repo_root/system/netplan/60-apple-ncm.yaml" \
   "$MGDL_ROOT/etc/netplan/60-apple-ncm.yaml" \
-  "@IFACE@" "$iface" "@GX10_IP@" "$GX10_IP" "@MAC_HOST@" "${MAC_IP%%/*}" "@MTU@" "$MTU"
+  "@IFACE@" "$iface" "@GX10_HOST@" "${GX10_IP%%/*}" "@MAC_HOST@" "${MAC_IP%%/*}" "@MTU@" "$MTU"
 
 run_cmd update-grub
 run_cmd udevadm control --reload

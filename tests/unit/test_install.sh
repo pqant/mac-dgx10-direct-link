@@ -160,7 +160,9 @@ test_install_renders_files() {
 
   assert_contains "$(cat "$root/etc/default/grub.d/apple-ncm.cfg")" \
     "usbcore.quirks=05ac:1905:k,05ac:1902:k"
-  assert_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "192.168.20.20/24"
+  assert_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "addresses: [192.168.20.20/32]"
+  # A /24 on the link would add a subnet route that hijacks a LAN on 172.16.0.0/24.
+  assert_not_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "/24"
   assert_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "macncm0"
   # Only a host route to the Mac: never a default route or gateway.
   assert_contains "$(cat "$root/etc/netplan/60-apple-ncm.yaml")" "routes: [{to: 192.168.20.17/32, scope: link}]"
