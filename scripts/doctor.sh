@@ -130,7 +130,11 @@ fi
 # -- Throughput tuning (apple-ncm-tune, applied by udev) ----------------------
 tune_hint="replug the cable or rerun the udev net trigger"
 # read_sys FILE - prints FILE without whitespace, or nothing if unreadable.
-read_sys() { [ -r "$1" ] && tr -d '[:space:]' <"$1" || true; }
+read_sys() {
+  if [ -r "$1" ]; then
+    tr -d '[:space:]' <"$1"
+  fi
+}
 # norm_mask MASK - strips commas and leading zeros from a kernel cpumask.
 norm_mask() {
   local m
