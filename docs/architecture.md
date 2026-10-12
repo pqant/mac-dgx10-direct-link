@@ -46,7 +46,7 @@ apt installs linux-image-X + linux-headers-X
       yes → BUILD_EXCLUSIVE no-match → skipped; in-tree module used   (S3)
       no  → PRE_BUILD prepare.sh X
               source order (stop at first success):
-                1. cache  /var/lib/mac-gx10-direct-link/src/X/cdc_ncm.c
+                1. cache  /var/lib/mac-dgx10-direct-link/src/X/cdc_ncm.c
                 2. Ubuntu source package for X (only if deb-src configured)
                 3. kernel.org stable  v<base>/drivers/net/usb/cdc_ncm.c  → WARNING
               none → fail with explicit message; never use another major.minor
@@ -57,7 +57,7 @@ apt installs linux-image-X + linux-headers-X
 
 `make install` runs `fetch-source.sh` so the cache is warm before an
 unattended `apt` run; `verify.sh --all-kernels` reports kernels without
-cached source. Log: `/var/log/mac-gx10-direct-link.log` records kernel,
+cached source. Log: `/var/log/mac-dgx10-direct-link.log` records kernel,
 source origin, SHA-256, and result.
 
 ### Cable plug-in

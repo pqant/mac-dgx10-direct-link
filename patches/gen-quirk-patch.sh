@@ -70,7 +70,7 @@ trap 'rm -f "$block_file"' EXIT
 
 {
   for pid in "${pids[@]}"; do
-    printf '\t/* Mac (direct USB-C networking, PID 0x%s) - mac-gx10-direct-link */\n' "$pid"
+    printf '\t/* Mac (direct USB-C networking, PID 0x%s) - mac-dgx10-direct-link */\n' "$pid"
     printf '\t{ USB_DEVICE_INTERFACE_NUMBER(0x05ac, 0x%s, 0),\n' "$pid"
     printf '\t\t.driver_info = (unsigned long)&apple_private_interface_info,\n'
     printf '\t},\n'

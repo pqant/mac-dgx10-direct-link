@@ -134,8 +134,8 @@ __good_env() {
   mkdir -p "$root/lib/modules/$kver/build"
   mkdir -p "$root/lib/modules/$kver/kernel/drivers/net/usb"
   : >"$root/lib/modules/$kver/kernel/drivers/net/usb/cdc_ncm.ko"
-  mkdir -p "$root/var/lib/mac-gx10-direct-link/src/$kver"
-  __synthetic_src "$root/var/lib/mac-gx10-direct-link/src/$kver/cdc_ncm.c"
+  mkdir -p "$root/var/lib/mac-dgx10-direct-link/src/$kver"
+  __synthetic_src "$root/var/lib/mac-dgx10-direct-link/src/$kver/cdc_ncm.c"
   : >"$root/calls.log"
   echo "$repo|$stub_dir|$root"
 }
@@ -413,6 +413,21 @@ test_uninstall_partial() {
 
   __run_uninstall "$repo" "$stub_dir" "$root" >"$root/.out" 2>&1 || rc=$?
   assert_eq "0" "$rc" "$(cat "$root/.out")"
+}
+
+test_install_migrates_legacy_state_dir() {
+  local parts repo stub_dir root rc=0
+  parts="$(__good_env)"
+  repo="${parts%%|*}"
+  parts="${parts#*|}"
+  stub_dir="${parts%%|*}"
+  root="${parts#*|}"
+  mv "$root/var/lib/mac-dgx10-direct-link" "$root/var/lib/mac-gx10-direct-link"
+
+  __run_install "$repo" "$stub_dir" "$root" >"$root/.out" 2>&1 || rc=$?
+  assert_eq "0" "$rc" "$(cat "$root/.out")"
+  assert_file_absent "$root/var/lib/mac-gx10-direct-link"
+  assert_eq "yes" "$([ -f "$root/var/lib/mac-dgx10-direct-link/src/$kver/cdc_ncm.c" ] && echo yes || echo no)"
 }
 
 test_dry_run_changes_nothing() {

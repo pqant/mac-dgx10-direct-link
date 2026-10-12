@@ -1,4 +1,4 @@
-# mac-gx10-direct-link
+# mac-dgx10-direct-link
 
 A self-retiring DKMS package and toolkit that keeps a direct Apple Mac ↔
 ASUS GX10 (DGX OS) USB-C CDC-NCM link working across kernel upgrades.

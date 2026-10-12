@@ -73,7 +73,7 @@ run_cmd rm -f "$MGDL_ROOT/usr/local/sbin/apple-ncm-tune"
 run_cmd rm -f "$MGDL_ROOT/etc/sysctl.d/60-apple-ncm.conf"
 
 if [ "$purge" -eq 1 ]; then
-  run_cmd rm -rf "$MGDL_STATE_DIR"
+  run_cmd rm -rf "$MGDL_STATE_DIR" "$MGDL_LEGACY_STATE_DIR"
 fi
 
 run_cmd depmod -a

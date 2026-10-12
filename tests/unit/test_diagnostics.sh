@@ -42,7 +42,7 @@ test_verify_dkms_status_scoped_to_our_module() {
   stub_dir="$(mk_tmp)"
   root="$(mk_tmp)"
   mods_dir="$root/lib/modules"
-  state_dir="$root/var/lib/mac-gx10-direct-link"
+  state_dir="$root/var/lib/mac-dgx10-direct-link"
   grub_dir="$root/etc/default/grub.d"
   cmdline_file="$root/proc_cmdline"
 
@@ -100,7 +100,7 @@ test_verify_mixed_kernels() {
   stub_dir="$(mk_tmp)"
   root="$(mk_tmp)"
   mods_dir="$root/lib/modules"
-  state_dir="$root/var/lib/mac-gx10-direct-link"
+  state_dir="$root/var/lib/mac-dgx10-direct-link"
   grub_dir="$root/etc/default/grub.d"
   cmdline_file="$root/proc_cmdline"
 
@@ -365,7 +365,7 @@ test_verify_cmdline_checks_all_configured_pids() {
   stub_dir="$(mk_tmp)"
   root="$(mk_tmp)"
   mods_dir="$root/lib/modules"
-  state_dir="$root/var/lib/mac-gx10-direct-link"
+  state_dir="$root/var/lib/mac-dgx10-direct-link"
   grub_dir="$root/etc/default/grub.d"
   cmdline_file="$root/proc_cmdline"
 

@@ -196,7 +196,7 @@ test_prepare_skips_already_quirked_source() {
   assert_eq "0" "$rc"
   assert_contains "$err" "already contains"
   assert_eq "$(cat "$state_dir/src/6.17.0-1-nvidia/cdc_ncm.c")" "$(cat "$build_dir/cdc_ncm.c")"
-  assert_not_contains "$(cat "$build_dir/cdc_ncm.c")" "mac-gx10-direct-link"
+  assert_not_contains "$(cat "$build_dir/cdc_ncm.c")" "mac-dgx10-direct-link"
   assert_eq "obj-m := cdc_ncm.o" "$(cat "$build_dir/Kbuild")"
 }
 

@@ -23,7 +23,7 @@ block immediately before the first `/* Ericsson MBM devices` anchor line,
 matching the formatting of upstream commit `a5148bc2fa27` :
 
 ```c
-	/* Mac (direct USB-C networking, PID 0x<pid>) - mac-gx10-direct-link */
+	/* Mac (direct USB-C networking, PID 0x<pid>) - mac-dgx10-direct-link */
 	{ USB_DEVICE_INTERFACE_NUMBER(0x05ac, 0x<pid>, 0),
 		.driver_info = (unsigned long)&apple_private_interface_info,
 	},

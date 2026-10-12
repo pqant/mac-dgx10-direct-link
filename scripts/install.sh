@@ -110,6 +110,10 @@ elif [ -d "$MGDL_ROOT/sys/firmware/efi/efivars" ]; then
 fi
 
 # -- Step 3: fetch-source.sh for every installed kernel ----------------------
+if [ -d "$MGDL_LEGACY_STATE_DIR" ] && [ ! -e "$MGDL_STATE_DIR" ]; then
+  run_cmd mkdir -p "$(dirname "$MGDL_STATE_DIR")"
+  run_cmd mv "$MGDL_LEGACY_STATE_DIR" "$MGDL_STATE_DIR"
+fi
 kernels=()
 if [ -d "$MGDL_MODULES_DIR" ]; then
   for d in "$MGDL_MODULES_DIR"/*/; do

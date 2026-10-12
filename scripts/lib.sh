@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 #
-# Shared helpers for mac-gx10-direct-link scripts. This file must have no
+# Shared helpers for mac-dgx10-direct-link scripts. This file must have no
 # side effects when sourced: no `set -e`/`set -u`, and no stdout/stderr
 # output. Every script that sources it is responsible for its own
 # `set -euo pipefail` and for calling mgdl_paths to populate MGDL_* defaults.
@@ -11,13 +11,15 @@
 mgdl_paths() {
   MGDL_ROOT="${MGDL_ROOT:-}"
   MGDL_MODULES_DIR="${MGDL_MODULES_DIR:-$MGDL_ROOT/lib/modules}"
-  MGDL_STATE_DIR="${MGDL_STATE_DIR:-$MGDL_ROOT/var/lib/mac-gx10-direct-link}"
-  MGDL_LOG="${MGDL_LOG:-$MGDL_ROOT/var/log/mac-gx10-direct-link.log}"
+  MGDL_STATE_DIR="${MGDL_STATE_DIR:-$MGDL_ROOT/var/lib/mac-dgx10-direct-link}"
+  MGDL_LOG="${MGDL_LOG:-$MGDL_ROOT/var/log/mac-dgx10-direct-link.log}"
+  # State dir used before the project was renamed; install.sh migrates it.
+  MGDL_LEGACY_STATE_DIR="${MGDL_LEGACY_STATE_DIR:-$MGDL_ROOT/var/lib/mac-gx10-direct-link}"
   MGDL_VERSION_SIGNATURE="${MGDL_VERSION_SIGNATURE:-/proc/version_signature}"
   MGDL_PROC_CMDLINE="${MGDL_PROC_CMDLINE:-/proc/cmdline}"
   MGDL_USBCORE_QUIRKS="${MGDL_USBCORE_QUIRKS:-/sys/module/usbcore/parameters/quirks}"
   MGDL_STABLE_URL_TEMPLATE="${MGDL_STABLE_URL_TEMPLATE:-https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/drivers/net/usb/cdc_ncm.c?h=v%s}"
-  export MGDL_ROOT MGDL_MODULES_DIR MGDL_STATE_DIR MGDL_LOG \
+  export MGDL_ROOT MGDL_MODULES_DIR MGDL_STATE_DIR MGDL_LOG MGDL_LEGACY_STATE_DIR \
     MGDL_VERSION_SIGNATURE MGDL_PROC_CMDLINE MGDL_USBCORE_QUIRKS \
     MGDL_STABLE_URL_TEMPLATE
 }
