@@ -91,8 +91,26 @@ the interface appears (`/usr/local/sbin/apple-ncm-tune`).
 
 ### Stability under sustained load
 
-> **Stable.** 5 minutes of full load in each direction, 480 GB in total,
-> with no link drops, no USB resets and 0 interface errors.
+> **Stable.** 1 hour of full load in both directions at once, 4.95 TB in
+> total, plus 5 minutes per direction, with no link drops, no USB resets
+> and 0 interface errors.
+
+**1 hour, both directions at once** (`iperf3 --bidir -P 2 -t 3600`), a
+heavier load than any real workload on this link:
+
+| Direction | Average | Data | Retransmits |
+|---|---|---|---|
+| Mac → GX10 | **7.12 Gbit/s** | 2.91 TB | not reported (counted on the Mac) |
+| GX10 → Mac | **5.00 Gbit/s** | 2.04 TB | 5534 (< 4 per million segments) |
+
+- Throughput was flat from start to end, with no slowdown over time.
+- USB stayed at 10000M, with no resets and no `cdc_ncm` kernel messages.
+- 0 RX/TX errors, 0 qdisc drops. The driver counted about 5500 TX drops
+  (about 13 per million packets); TCP recovered them.
+- Peak temperature 62.5 °C, settling at 45 °C.
+- `make doctor` passed every check afterwards.
+
+**5 minutes per direction** (`iperf3 -P 2 -t 300`):
 
 | Test (`iperf3 -P 2 -t 300`) | Average | Min / max per 30 s | Data | Retransmits |
 |---|---|---|---|---|
