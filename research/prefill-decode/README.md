@@ -11,13 +11,13 @@ Compares, for the same `Qwen3.8-27B` model and the same prompts, four
 execution modes across the USB-C link configured by this repository:
 
 1. **Mac alone** - `llamacpp-rpc.sh local` on the Mac (single-device
-   baseline, no GX10 involvement).
-2. **GX10 alone** - `llamacpp-rpc.sh local` on the GX10 (single-device
+   baseline, no DGX10 involvement).
+2. **DGX10 alone** - `llamacpp-rpc.sh local` on the DGX10 (single-device
    baseline, no Mac involvement).
-3. **RPC split** - `llamacpp-rpc.sh server` on the GX10, `llamacpp-rpc.sh
+3. **RPC split** - `llamacpp-rpc.sh server` on the DGX10, `llamacpp-rpc.sh
    client` on the Mac, using llama.cpp's built-in `rpc-server`/`--rpc`
    backend split over the USB-C link.
-4. **EXO split** - a prefill(GX10)/decode(Mac) split via EXO, if
+4. **EXO split** - a prefill(DGX10)/decode(Mac) split via EXO, if
    supported; see [`exo.md`](exo.md).
 
 Isolation from the driver: this directory only depends on the link being
@@ -32,7 +32,7 @@ M7 contexts where feasible: 8192, 32768, 131072 tokens), run all four
 modes and record `ttft_ms,tokens_per_s` per run:
 
 ```bash
-# GX10
+# DGX10
 research/prefill-decode/llamacpp-rpc.sh server MODEL.gguf &
 research/prefill-decode/llamacpp-rpc.sh local MODEL.gguf prompt-8k.txt
 

@@ -216,7 +216,7 @@ render_template "$repo_root/system/udev/90-apple-ncm.rules" \
   "@PREFIX@" "$IFACE_PREFIX" "@IFNUM@" "$(printf '%02d' "$IFACE_NUM")"
 render_template "$repo_root/system/netplan/60-apple-ncm.yaml" \
   "$MGDL_ROOT/etc/netplan/60-apple-ncm.yaml" \
-  "@IFACE@" "$iface" "@GX10_HOST@" "${GX10_IP%%/*}" "@MAC_HOST@" "${MAC_IP%%/*}" "@MTU@" "$MTU"
+  "@IFACE@" "$iface" "@DGX10_HOST@" "${DGX10_IP%%/*}" "@MAC_HOST@" "${MAC_IP%%/*}" "@MTU@" "$MTU"
 render_template "$repo_root/system/tune/apple-ncm-tune" \
   "$MGDL_ROOT/usr/local/sbin/apple-ncm-tune" \
   "@IFACE@" "$iface" "@IRQ_CPU@" "$TUNE_IRQ_CPU" "@RPS_MASK@" "$TUNE_RPS_MASK" \

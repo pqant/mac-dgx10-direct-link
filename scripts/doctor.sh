@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Read-only health check for the Mac <-> GX10 CDC-NCM link. Never writes
+# Read-only health check for the Mac <-> DGX10 CDC-NCM link. Never writes
 # outside stdout/stderr and never escalates privileges.
 set -euo pipefail
 
@@ -97,7 +97,7 @@ else
   fail "interfaces bound to cdc_ncm"
 fi
 
-# -- IFACE_PREFIX+IFACE_NUM has GX10_IP; routing to MAC_IP ------------------
+# -- IFACE_PREFIX+IFACE_NUM has DGX10_IP; routing to MAC_IP ------------------
 iface_name=""
 if load_link_conf "$link_conf" 2>/dev/null; then
   iface_name="${IFACE_PREFIX}${IFACE_NUM}"
@@ -105,14 +105,14 @@ fi
 
 if [ -n "$iface_name" ] && command -v ip >/dev/null 2>&1; then
   addr_out="$(ip -o addr show dev "$iface_name" 2>/dev/null || true)"
-  gx10_ip_nomask="${GX10_IP%%/*}"
+  dgx10_ip_nomask="${DGX10_IP%%/*}"
   # M8: grep -F for a literal match; without it, the dots in an IPv4
   # address are regex metacharacters ('.' matches any char), so an
   # unrelated address with the same shape could false-PASS.
-  if grep -qF "$gx10_ip_nomask" <<<"$addr_out"; then
-    pass "$iface_name has $GX10_IP"
+  if grep -qF "$dgx10_ip_nomask" <<<"$addr_out"; then
+    pass "$iface_name has $DGX10_IP"
   else
-    fail "$iface_name has $GX10_IP"
+    fail "$iface_name has $DGX10_IP"
   fi
 
   mac_ip_nomask="${MAC_IP%%/*}"
@@ -123,7 +123,7 @@ if [ -n "$iface_name" ] && command -v ip >/dev/null 2>&1; then
     fail "route to $mac_ip_nomask via $iface_name"
   fi
 else
-  fail "${iface_name:-IFACE_PREFIX+IFACE_NUM} has GX10_IP"
+  fail "${iface_name:-IFACE_PREFIX+IFACE_NUM} has DGX10_IP"
   fail "route to MAC_IP via ${iface_name:-IFACE_PREFIX+IFACE_NUM}"
 fi
 

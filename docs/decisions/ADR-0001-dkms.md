@@ -6,7 +6,7 @@ Accepted.
 
 ## Context
 
-The GX10 (DGX OS) kernel needs the upstream Apple CDC-NCM quirk
+The DGX10 (DGX OS) kernel needs the upstream Apple CDC-NCM quirk
 (`v05ACp1905` alias on `cdc_ncm`) so that the Mac's private CDC-NCM
 interfaces bind instead of failing with `bind() failure`. Some installed
 kernels already carry this quirk in-tree (recent/backported kernels);

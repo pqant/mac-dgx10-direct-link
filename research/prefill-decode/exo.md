@@ -1,7 +1,7 @@
-# EXO prefill(GX10)/decode(Mac) split procedure
+# EXO prefill(DGX10)/decode(Mac) split procedure
 
 **[ASSUMPTION]** EXO (`exo-explore/exo`) supports a heterogeneous
-prefill/decode split for `Qwen3.8-27B` across a CUDA node (GX10) and a
+prefill/decode split for `Qwen3.8-27B` across a CUDA node (DGX10) and a
 Metal node (Mac) over a plain IP link. This has not been verified yet;
 the first run of this procedure must confirm it and record "not
 supported" as a valid, honest result if EXO cannot express this split
@@ -21,15 +21,15 @@ splitting prefill and decode roles).
 
 ## Procedure
 
-1. **[OWNER]** On both the GX10 and the Mac, clone the pinned `exo`
+1. **[OWNER]** On both the DGX10 and the Mac, clone the pinned `exo`
    commit and install its dependencies per its own `README.md`
    instructions (do not substitute package versions).
 2. **[OWNER]** Configure EXO's cluster discovery or static peer list to
    use the USB-C link addresses from this repository
-   (`GX10_IP=192.168.20.20`, `MAC_IP=192.168.20.17`; see `config/link.conf`),
+   (`DGX10_IP=192.168.20.20`, `MAC_IP=192.168.20.17`; see `config/link.conf`),
    not the Wi-Fi/Ethernet addresses, so the experiment measures this
    project's link.
-3. **[OWNER]** Attempt to pin the model's prefill stage to the GX10 node
+3. **[OWNER]** Attempt to pin the model's prefill stage to the DGX10 node
    and the decode stage to the Mac node, following EXO's own
    partitioning/placement configuration. If EXO has no mechanism to pin
    prefill vs. decode roles to specific nodes (as opposed to balancing

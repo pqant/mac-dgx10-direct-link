@@ -3,7 +3,7 @@
 ## Scope
 
 This directory investigates whether running prefill for `Qwen/Qwen3.8-27B`
-on the GX10 (CUDA) and transferring the resulting KV cache / recurrent
+on the DGX10 (CUDA) and transferring the resulting KV cache / recurrent
 state to the Mac (Metal) over the USB-C link, then decoding on the Mac, is
 faster than running prefill directly on the Mac.
 
@@ -41,7 +41,7 @@ repository's bash test harness beyond being hooked into
    and a GGUF of the model):
 
    ```bash
-   research/prefill-bench/run.sh MODEL.gguf gx10-bench.json   # on GX10
+   research/prefill-bench/run.sh MODEL.gguf dgx10-bench.json   # on DGX10
    research/prefill-bench/run.sh MODEL.gguf mac-bench.json    # on the Mac
    ```
 
@@ -49,7 +49,7 @@ repository's bash test harness beyond being hooked into
    link:
 
    ```bash
-   python research/go_nogo.py --gx10 gx10-bench.json --mac mac-bench.json \
+   python research/go_nogo.py --dgx10 dgx10-bench.json --mac mac-bench.json \
      --config research/data/config.json --link-json results/<dir>/fwd.json
    ```
 

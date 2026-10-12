@@ -75,7 +75,7 @@ read_pids() {
 }
 
 # load_link_conf FILE - sources FILE (after stripping \r) into the caller's
-# shell. Validates GX10_IP/MAC_IP and IFACE_NUM, returning 64 on any
+# shell. Validates DGX10_IP/MAC_IP and IFACE_NUM, returning 64 on any
 # violation.
 load_link_conf() {
   local file="$1"
@@ -91,8 +91,8 @@ load_link_conf() {
     return 64
   fi
 
-  if [[ ! "${GX10_IP:-}" =~ ^[0-9.]+/[0-9]+$ ]]; then
-    log_error "invalid GX10_IP '${GX10_IP:-}' in $file"
+  if [[ ! "${DGX10_IP:-}" =~ ^[0-9.]+/[0-9]+$ ]]; then
+    log_error "invalid DGX10_IP '${DGX10_IP:-}' in $file"
     return 64
   fi
   if [[ ! "${MAC_IP:-}" =~ ^[0-9.]+/[0-9]+$ ]]; then

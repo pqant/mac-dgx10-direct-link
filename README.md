@@ -1,22 +1,22 @@
 # mac-dgx10-direct-link
 
 A self-retiring DKMS package and toolkit that keeps a direct Apple Mac ↔
-ASUS GX10 (DGX OS) USB-C CDC-NCM link working across kernel upgrades.
+ASUS DGX10 (DGX OS) USB-C CDC-NCM link working across kernel upgrades.
 
 ## Purpose
 
-The MacBook Pro M5 Max and the ASUS Ascent GX10 are connected with a single
+The MacBook Pro M5 Max and the ASUS Ascent DGX10 are connected with a single
 USB-C cable as a static point-to-point IP link. It works without Wi-Fi or
-DHCP, survives GX10 kernel upgrades with no manual action, retires itself
+DHCP, survives DGX10 kernel upgrades with no manual action, retires itself
 once the distro kernel ships the upstream Apple CDC-NCM quirk, and provides
 reproducible link measurements that feed prefill/decode research (prefill on
-GX10, decode on Mac).
+DGX10, decode on Mac).
 
 ## IP plan
 
-| Link | Mac side | GX10 side |
+| Link | Mac side | DGX10 side |
 |---|---|---|
-| USB-C (static) | M5 Max 192.168.20.17/24 | GX10 192.168.20.20/24 |
+| USB-C (static) | M5 Max 192.168.20.17/24 | DGX10 192.168.20.20/24 |
 
 No gateway, DNS, or hostnames are set on this link. It uses its own subnet,
 so it never overlaps the LAN, and it avoids `10.x`, which VPN or zero-trust
@@ -50,11 +50,11 @@ MTU. See [`macos/setup-ip.md`](macos/setup-ip.md) for details.
 
 ## Measured performance
 
-Hardware: MacBook Pro M5 Max (macOS 27) and ASUS Ascent GX10 (DGX OS,
+Hardware: MacBook Pro M5 Max (macOS 27) and ASUS Ascent DGX10 (DGX OS,
 kernel 7.0), one USB-C cable, negotiated at 10 Gbit/s (USB 3.2 Gen 2x1).
 TCP throughput from `iperf3`, 4 parallel streams, 10 s runs.
 
-| Setup | Mac → GX10 | GX10 → Mac |
+| Setup | Mac → DGX10 | DGX10 → Mac |
 |---|---|---|
 | Untuned (MTU 1500, 16 KiB NTB, IRQ on CPU0) | 0.73 Gbit/s | 0.97 Gbit/s |
 | xHCI interrupt moved to a big core | 3.5 Gbit/s | 3.9 Gbit/s |
@@ -82,7 +82,7 @@ What made the difference, all applied by `make install`:
 - `txqueuelen 10000` and `netdev_max_backlog`/`netdev_budget` in
   `/etc/sysctl.d/60-apple-ncm.conf`.
 
-Leave `tx_timer_usecs` at its default (400): 0 lowers GX10 → Mac. Do not add
+Leave `tx_timer_usecs` at its default (400): 0 lowers DGX10 → Mac. Do not add
 `notrack` firewall rules on this interface: with ufw active, untracked
 packets are dropped and the link stops.
 
@@ -100,8 +100,8 @@ heavier load than any real workload on this link:
 
 | Direction | Average | Data | Retransmits |
 |---|---|---|---|
-| Mac → GX10 | **7.12 Gbit/s** | 2.91 TB | not reported (counted on the Mac) |
-| GX10 → Mac | **5.00 Gbit/s** | 2.04 TB | 5534 (< 4 per million segments) |
+| Mac → DGX10 | **7.12 Gbit/s** | 2.91 TB | not reported (counted on the Mac) |
+| DGX10 → Mac | **5.00 Gbit/s** | 2.04 TB | 5534 (< 4 per million segments) |
 
 - Throughput was flat from start to end, with no slowdown over time.
 - USB stayed at 10000M, with no resets and no `cdc_ncm` kernel messages.
@@ -114,13 +114,13 @@ heavier load than any real workload on this link:
 
 | Test (`iperf3 -P 2 -t 300`) | Average | Min / max per 30 s | Data | Retransmits |
 |---|---|---|---|---|
-| Mac → GX10 | **7.73 Gbit/s** | 7.69 / 7.80 | 270 GB | 4 |
-| GX10 → Mac | **6.02 Gbit/s** | 5.91 / 6.04 | 210 GB | 3 |
+| Mac → DGX10 | **7.73 Gbit/s** | 7.69 / 7.80 | 270 GB | 4 |
+| DGX10 → Mac | **6.02 Gbit/s** | 5.91 / 6.04 | 210 GB | 3 |
 
 Ping from the Mac while the link was saturated: 0 % loss, 1.37 ms average,
 3.4 ms max. Two notes for anyone repeating this:
 
-- Ping from the GX10 to the Mac gets no reply when macOS firewall stealth
+- Ping from the DGX10 to the Mac gets no reply when macOS firewall stealth
   mode is on. TCP traffic is not affected.
 - Run `ping` on the Mac in the foreground. macOS throttles low-priority
   background processes, so a backgrounded `ping` stops sending and reports
@@ -128,7 +128,7 @@ Ping from the Mac while the link was saturated: 0 % loss, 1.37 ms average,
 
 ## Future work
 
-- **The cable is not the limit.** The GX10 ports offer 20 Gbit/s (Gen 2x2),
+- **The cable is not the limit.** The DGX10 ports offer 20 Gbit/s (Gen 2x2),
   but the Mac in USB device mode links at 10 Gbit/s (Gen 2x1) even with an
   80 Gbit/s cable. Apple controllers do not support Gen 2x2.
 - **Second cable.** A second link (`macncm1`/`en4`) could carry about
@@ -138,7 +138,7 @@ Ping from the Mac while the link was saturated: 0 % loss, 1.37 ms average,
 - **Small CPU-side gains (maybe 5-10 %), with trade-offs.** IOMMU
   passthrough (needs a reboot and drops DMA isolation), and exempting this
   interface from conntrack without breaking ufw.
-- **Different link.** The GX10 ConnectX-7 QSFP port to a Thunderbolt
+- **Different link.** The DGX10 ConnectX-7 QSFP port to a Thunderbolt
   25/40GbE adapter on the Mac could exceed 20 Gbit/s. Not researched yet.
 
 ## Safety boundaries

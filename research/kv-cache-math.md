@@ -23,7 +23,7 @@ verdict) once the owner returns the two `llama-bench` JSON files.
    where `link_bytes_per_second` comes from `end.sum_received.bits_per_second
    / 8` in a `tests/bench.sh` `fwd.json` result.
 6. Go/no-go: GO for a context length when
-   `prefill_time_gx10 + transfer_time < prefill_time_mac` (measured via
+   `prefill_time_dgx10 + transfer_time < prefill_time_mac` (measured via
    `llama-bench`); an overall verdict of GO is recorded if
    any tested context is GO.
 
@@ -55,7 +55,7 @@ Not yet available - requires:
   `research/data/config.json` and re-derive the table above from the real
   values.
 - **[OWNER]** Install llama.cpp on both machines (Metal on the Mac, CUDA
-  on the GX10) and obtain a `Qwen3.8-27B` GGUF at the same quantization on
+  on the DGX10) and obtain a `Qwen3.8-27B` GGUF at the same quantization on
   both.
 - **[OWNER]** Run `research/prefill-bench/run.sh` on each machine and
   return both JSON files, plus a `tests/bench.sh` `fwd.json` link measurement.

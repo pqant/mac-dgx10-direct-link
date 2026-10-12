@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Brings the Mac <-> GX10 USB-C CDC-NCM link up or down. Dry-run by default;
+# Brings the Mac <-> DGX10 USB-C CDC-NCM link up or down. Dry-run by default;
 # only touches the named interface and its address (no default route, no
 # DNS).
 set -euo pipefail
@@ -72,12 +72,12 @@ run_or_print() {
 # A /32 host route wins over a LAN that shares the link's /24.
 mac_host="${MAC_IP%%/*}/32"
 # /32, not the /24: a subnet route here would steal the LAN from Wi-Fi.
-gx10_host="${GX10_IP%%/*}/32"
+dgx10_host="${DGX10_IP%%/*}/32"
 if [ "$down" -eq 1 ]; then
   run_or_print ip route del "$mac_host" dev "$iface"
-  run_or_print ip addr del "$gx10_host" dev "$iface"
+  run_or_print ip addr del "$dgx10_host" dev "$iface"
 else
-  run_or_print ip addr replace "$gx10_host" dev "$iface"
+  run_or_print ip addr replace "$dgx10_host" dev "$iface"
   run_or_print ip link set "$iface" up
   run_or_print ip route replace "$mac_host" dev "$iface" scope link
 fi

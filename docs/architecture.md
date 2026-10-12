@@ -4,11 +4,11 @@
 ## Roles
 
 The Mac acts as a USB device exposing Apple's private CDC-NCM functions.
-The GX10 (DGX OS, Linux) acts as the USB host and binds those functions to
+The DGX10 (DGX OS, Linux) acts as the USB host and binds those functions to
 `cdc_ncm`.
 
 ```text
-Apple Silicon Mac                         GX10 (Linux)
+Apple Silicon Mac                         DGX10 (Linux)
 -----------------                        -------------
 AppleUSBDeviceNCMPrivateEthernetInterface USB host controller
 USB VID:PID 05ac:1905 (or 1902)  <---->   cdc_ncm
@@ -104,7 +104,7 @@ application socket
   -> IP routing
   -> Mac enX
   -> CDC-NCM NTBs over USB
-  -> GX10 macncm<N>
+  -> DGX10 macncm<N>
   -> application socket
 ```
 

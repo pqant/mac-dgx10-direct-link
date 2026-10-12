@@ -44,7 +44,7 @@ ip -br addr
 ip route get 192.168.20.17
 ```
 
-Confirm that Mac and GX10 use different addresses in the same `/24`, both
+Confirm that Mac and DGX10 use different addresses in the same `/24`, both
 interfaces are up, and the route selects the USB (`macncm<N>`) interface.
 Check host firewalls without changing the default route or DNS.
 

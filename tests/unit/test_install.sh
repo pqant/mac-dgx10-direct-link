@@ -311,7 +311,7 @@ test_install_invalid_link_conf_aborts_before_change() {
   stub_dir="${parts%%|*}"
   root="${parts#*|}"
 
-  printf 'GX10_IP=192.168.20.20/24\nMAC_IP=192.168.20.17/24\nMTU=1500\nIFACE_NUM=9\nIFACE_PREFIX=macncm\n' \
+  printf 'DGX10_IP=192.168.20.20/24\nMAC_IP=192.168.20.17/24\nMTU=1500\nIFACE_NUM=9\nIFACE_PREFIX=macncm\n' \
     >"$repo/config/link.conf"
 
   __run_install "$repo" "$stub_dir" "$root" >"$root/.out" 2>&1 || rc=$?

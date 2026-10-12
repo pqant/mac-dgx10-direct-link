@@ -1,6 +1,6 @@
 # macOS M5 Max: static IP for the USB-C link
 
-**[OWNER]** These steps run on the Mac, not the GX10. Values match
+**[OWNER]** These steps run on the Mac, not the DGX10. Values match
 `config/link.conf` (`MAC_IP=192.168.20.17/24`, mask `255.255.255.0`). No
 gateway/router and no DNS are set on this link.
 
@@ -42,7 +42,7 @@ user. The manual steps below do the same thing.
    ```
 
 4. Match the link MTU (`MTU=8178` in `config/link.conf`). Without it, the
-   GX10's 32 KiB NTB tuning loses most of its gain:
+   DGX10's 32 KiB NTB tuning loses most of its gain:
 
    ```sh
    sudo ifconfig en3 mtu 8178
@@ -57,7 +57,7 @@ user. The manual steps below do the same thing.
    networksetup -setdhcp "<service>"
    ```
 
-6. For bandwidth benchmarks (paired with `tests/bench.sh` on the GX10 side),
+6. For bandwidth benchmarks (paired with `tests/bench.sh` on the DGX10 side),
    start an iperf3 server:
 
    ```sh

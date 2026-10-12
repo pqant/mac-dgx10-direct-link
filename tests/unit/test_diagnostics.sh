@@ -272,7 +272,7 @@ test_doctor_literal_ip_match_not_regex() {
   repo="$(__repo_env)"
   stub_dir="$(mk_tmp)"
   mk_stub "$stub_dir" lsusb 'echo "Bus 001 Device 003: ID 05ac:1905 Apple, Inc."'
-  # M8: without -F, GX10_IP "192.168.20.20" is a regex where '.' matches any
+  # M8: without -F, DGX10_IP "192.168.20.20" is a regex where '.' matches any
   # char, so an address that merely has the same shape (but isn't the
   # configured IP) would wrongly match.
   mk_stub "$stub_dir" ip '
