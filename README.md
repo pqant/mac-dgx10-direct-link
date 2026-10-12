@@ -34,7 +34,8 @@ sudo make install   # builds/installs the DKMS module if the in-tree
 make doctor          # read-only PASS/FAIL table, no root required
 ```
 
-See [`macos/setup-ip.md`](macos/setup-ip.md) for the Mac-side static IP steps.
+On the Mac, run `bash macos/setup.sh` once; it persists the static IP and
+MTU. See [`macos/setup-ip.md`](macos/setup-ip.md) for details.
 
 ## Everyday commands
 

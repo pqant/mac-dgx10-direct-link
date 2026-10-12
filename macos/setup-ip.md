@@ -4,6 +4,16 @@
 `config/link.conf` (`MAC_IP=192.168.20.17/24`, mask `255.255.255.0`). No
 gateway/router and no DNS are set on this link.
 
+Quick path: with the cable plugged in, run from the repo root
+
+```sh
+bash macos/setup.sh        # or: bash macos/setup.sh en4
+```
+
+It stores the IP and MTU from `config/link.conf` in the network service, so
+they survive reboots and cable replugs. No sudo is needed for an admin
+user. The manual steps below do the same thing.
+
 1. List the network services and find the one for the Apple USB-C/Ethernet
    adapter created when the cable is plugged in:
 
