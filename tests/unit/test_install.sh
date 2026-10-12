@@ -188,9 +188,28 @@ test_install_renders_files() {
   assert_eq "yes" "$([ -x "$root/usr/local/sbin/apple-ncm-tune" ] && echo yes || echo no)"
   assert_contains "$(cat "$root/usr/local/sbin/apple-ncm-tune")" "IF=macncm0"
   assert_contains "$(cat "$root/usr/local/sbin/apple-ncm-tune")" "NTB_MAX=32764"
+  assert_contains "$(cat "$root/usr/local/sbin/apple-ncm-tune")" "MTU=8178"
   assert_not_contains "$(cat "$root/usr/local/sbin/apple-ncm-tune")" "@"
+  assert_contains "$(cat "$root/.out")" "reboot required"
   assert_contains "$(cat "$root/etc/sysctl.d/60-apple-ncm.conf")" "net.core.netdev_max_backlog = 10000"
   assert_contains "$(cat "$root/calls.log")" "sysctl -q -p $root/etc/sysctl.d/60-apple-ncm.conf"
+}
+
+test_install_quirk_active_applies_tuning_without_reboot() {
+  local parts repo stub_dir root rc=0
+  parts="$(__good_env)"
+  repo="${parts%%|*}"
+  parts="${parts#*|}"
+  stub_dir="${parts%%|*}"
+  root="${parts#*|}"
+  mkdir -p "$root/proc" "$root/sys/class/net/macncm0/cdc_ncm"
+  echo "ro quiet usbcore.quirks=05ac:1905:k,05ac:1902:k" >"$root/proc/cmdline"
+
+  __run_install "$repo" "$stub_dir" "$root" --dry-run >"$root/.out" 2>&1 || rc=$?
+  assert_eq "0" "$rc" "$(cat "$root/.out")"
+  assert_contains "$(cat "$root/.out")" "DRY: $root/usr/local/sbin/apple-ncm-tune"
+  assert_contains "$(cat "$root/.out")" "no reboot needed"
+  assert_not_contains "$(cat "$root/.out")" "reboot required"
 }
 
 test_install_idempotent() {

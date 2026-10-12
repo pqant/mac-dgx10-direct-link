@@ -216,7 +216,7 @@ render_template "$repo_root/system/netplan/60-apple-ncm.yaml" \
 render_template "$repo_root/system/tune/apple-ncm-tune" \
   "$MGDL_ROOT/usr/local/sbin/apple-ncm-tune" \
   "@IFACE@" "$iface" "@IRQ_CPU@" "$TUNE_IRQ_CPU" "@RPS_MASK@" "$TUNE_RPS_MASK" \
-  "@NTB_MAX@" "$NTB_MAX" "@TXQLEN@" "$TXQLEN"
+  "@NTB_MAX@" "$NTB_MAX" "@TXQLEN@" "$TXQLEN" "@MTU@" "$MTU"
 run_cmd chmod 755 "$MGDL_ROOT/usr/local/sbin/apple-ncm-tune"
 render_template "$repo_root/system/sysctl/60-apple-ncm.conf" \
   "$MGDL_ROOT/etc/sysctl.d/60-apple-ncm.conf"
@@ -237,4 +237,15 @@ if command -v nmcli >/dev/null 2>&1; then
 fi
 
 # -- Step 7: owner follow-up --------------------------------------------------
-echo '[OWNER] reboot required for usbcore.quirks; then plug the Mac and run: make doctor'
+cmdline="$(cat "$MGDL_ROOT/proc/cmdline" 2>/dev/null || true)"
+if [[ "$cmdline" != *"usbcore.quirks=$quirks"* ]]; then
+  echo '[OWNER] reboot required for usbcore.quirks; then plug the Mac and run: make doctor'
+  exit 0
+fi
+# The quirk is already active, so no reboot. udev applies the tuning on the
+# next plug; apply it now too if the link is already up.
+if [ -d "$MGDL_ROOT/sys/class/net/$iface/cdc_ncm" ]; then
+  run_cmd "$MGDL_ROOT/usr/local/sbin/apple-ncm-tune"
+  echo "tuning applied to $iface"
+fi
+echo '[OWNER] no reboot needed; run: make doctor'

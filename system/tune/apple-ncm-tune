@@ -6,6 +6,7 @@ IRQ_CPU=@IRQ_CPU@
 RPS_MASK=@RPS_MASK@
 NTB_MAX=@NTB_MAX@
 TXQLEN=@TXQLEN@
+MTU=@MTU@
 
 net=/sys/class/net/$IF
 i=0
@@ -20,6 +21,9 @@ echo "$NTB_MAX" >"$net/cdc_ncm/rx_max" 2>/dev/null
 echo "$NTB_MAX" >"$net/cdc_ncm/tx_max" 2>/dev/null
 echo "$RPS_MASK" >"$net/queues/rx-0/rps_cpus" 2>/dev/null
 ip link set dev "$IF" txqueuelen "$TXQLEN" 2>/dev/null
+# Set here as well as in netplan: NetworkManager applies its MTU only when the
+# profile activates, not on a reload or a udev retrigger.
+ip link set dev "$IF" mtu "$MTU" 2>/dev/null
 
 # By default every xHCI interrupt lands on CPU0, a small core that saturates
 # near 1 Gbit/s. The IRQ is named after the controller's first root hub.
