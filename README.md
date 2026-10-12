@@ -89,6 +89,25 @@ packets are dropped and the link stops.
 Values live in `config/link.conf` and the script runs from udev each time
 the interface appears (`/usr/local/sbin/apple-ncm-tune`).
 
+### Stability under sustained load
+
+> **Stable.** 5 minutes of full load in each direction, 480 GB in total,
+> with no link drops, no USB resets and 0 interface errors.
+
+| Test (`iperf3 -P 2 -t 300`) | Average | Min / max per 30 s | Data | Retransmits |
+|---|---|---|---|---|
+| Mac → GX10 | **7.73 Gbit/s** | 7.69 / 7.80 | 270 GB | 4 |
+| GX10 → Mac | **6.02 Gbit/s** | 5.91 / 6.04 | 210 GB | 3 |
+
+Ping from the Mac while the link was saturated: 0 % loss, 1.37 ms average,
+3.4 ms max. Two notes for anyone repeating this:
+
+- Ping from the GX10 to the Mac gets no reply when macOS firewall stealth
+  mode is on. TCP traffic is not affected.
+- Run `ping` on the Mac in the foreground. macOS throttles low-priority
+  background processes, so a backgrounded `ping` stops sending and reports
+  false timeouts.
+
 ## Future work
 
 - **The cable is not the limit.** The GX10 ports offer 20 Gbit/s (Gen 2x2),
