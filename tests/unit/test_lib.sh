@@ -199,4 +199,19 @@ test_stable_tag() {
   assert_eq "v6.17.9" "$(stable_tag 6.17.9)"
 }
 
+test_mgdl_paths_falls_back_to_legacy_state_dir() {
+  local root
+  root="$(mk_tmp)"
+  mkdir -p "$root/var/lib/mac-gx10-direct-link"
+  unset -v MGDL_STATE_DIR MGDL_LEGACY_STATE_DIR || true
+  MGDL_ROOT="$root"
+  mgdl_paths
+  assert_eq "$root/var/lib/mac-gx10-direct-link" "$MGDL_STATE_DIR"
+
+  mkdir -p "$root/var/lib/mac-dgx10-direct-link"
+  unset -v MGDL_STATE_DIR
+  mgdl_paths
+  assert_eq "$root/var/lib/mac-dgx10-direct-link" "$MGDL_STATE_DIR"
+}
+
 run_tests

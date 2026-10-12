@@ -11,15 +11,23 @@
 mgdl_paths() {
   MGDL_ROOT="${MGDL_ROOT:-}"
   MGDL_MODULES_DIR="${MGDL_MODULES_DIR:-$MGDL_ROOT/lib/modules}"
-  MGDL_STATE_DIR="${MGDL_STATE_DIR:-$MGDL_ROOT/var/lib/mac-dgx10-direct-link}"
   MGDL_LOG="${MGDL_LOG:-$MGDL_ROOT/var/log/mac-dgx10-direct-link.log}"
+  MGDL_DEFAULT_STATE_DIR="$MGDL_ROOT/var/lib/mac-dgx10-direct-link"
   # State dir used before the project was renamed; install.sh migrates it.
+  # Until then, fall back to it so verify/doctor still find the cache.
   MGDL_LEGACY_STATE_DIR="${MGDL_LEGACY_STATE_DIR:-$MGDL_ROOT/var/lib/mac-gx10-direct-link}"
+  if [ -z "${MGDL_STATE_DIR:-}" ]; then
+    MGDL_STATE_DIR="$MGDL_DEFAULT_STATE_DIR"
+    if [ ! -e "$MGDL_STATE_DIR" ] && [ -d "$MGDL_LEGACY_STATE_DIR" ]; then
+      MGDL_STATE_DIR="$MGDL_LEGACY_STATE_DIR"
+    fi
+  fi
   MGDL_VERSION_SIGNATURE="${MGDL_VERSION_SIGNATURE:-/proc/version_signature}"
   MGDL_PROC_CMDLINE="${MGDL_PROC_CMDLINE:-/proc/cmdline}"
   MGDL_USBCORE_QUIRKS="${MGDL_USBCORE_QUIRKS:-/sys/module/usbcore/parameters/quirks}"
   MGDL_STABLE_URL_TEMPLATE="${MGDL_STABLE_URL_TEMPLATE:-https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/drivers/net/usb/cdc_ncm.c?h=v%s}"
-  export MGDL_ROOT MGDL_MODULES_DIR MGDL_STATE_DIR MGDL_LOG MGDL_LEGACY_STATE_DIR \
+  export MGDL_ROOT MGDL_MODULES_DIR MGDL_STATE_DIR MGDL_LOG \
+    MGDL_DEFAULT_STATE_DIR MGDL_LEGACY_STATE_DIR \
     MGDL_VERSION_SIGNATURE MGDL_PROC_CMDLINE MGDL_USBCORE_QUIRKS \
     MGDL_STABLE_URL_TEMPLATE
 }
