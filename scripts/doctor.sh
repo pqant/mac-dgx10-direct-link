@@ -127,6 +127,56 @@ else
   fail "route to MAC_IP via ${iface_name:-IFACE_PREFIX+IFACE_NUM}"
 fi
 
+# -- Throughput tuning (apple-ncm-tune, applied by udev) ----------------------
+tune_hint="replug the cable or rerun the udev net trigger"
+# read_sys FILE - prints FILE without whitespace, or nothing if unreadable.
+read_sys() { [ -r "$1" ] && tr -d '[:space:]' <"$1" || true; }
+# norm_mask MASK - strips commas and leading zeros from a kernel cpumask.
+norm_mask() {
+  local m
+  m="$(tr -d ',' <<<"$1" | tr '[:upper:]' '[:lower:]' | sed 's/^0*//')"
+  echo "${m:-0}"
+}
+check_eq() {
+  if [ "$2" = "$3" ]; then
+    pass "$1 = $3"
+  else
+    fail "$1 = $3 (found ${2:-unknown}) - $tune_hint"
+  fi
+}
+net_dir="$MGDL_ROOT/sys/class/net/${iface_name:-none}"
+if [ -n "$iface_name" ] && [ -d "$net_dir" ]; then
+  check_eq "$iface_name mtu" "$(read_sys "$net_dir/mtu")" "$MTU"
+  check_eq "$iface_name tx_queue_len" "$(read_sys "$net_dir/tx_queue_len")" "$TXQLEN"
+  check_eq "$iface_name NTB rx_max" "$(read_sys "$net_dir/cdc_ncm/rx_max")" "$NTB_MAX"
+  check_eq "$iface_name NTB tx_max" "$(read_sys "$net_dir/cdc_ncm/tx_max")" "$NTB_MAX"
+  check_eq "$iface_name rps_cpus" \
+    "$(norm_mask "$(read_sys "$net_dir/queues/rx-0/rps_cpus")")" "$(norm_mask "$TUNE_RPS_MASK")"
+
+  # Same lookup as apple-ncm-tune: the xHCI IRQ is named after a root hub.
+  irq_list=""
+  d="$(readlink -f "$net_dir/device" 2>/dev/null || true)"
+  while [ -n "$d" ] && [ "$d" != "/" ]; do
+    case "${d##*/}" in usb[0-9]*) break ;; esac
+    d="${d%/*}"
+  done
+  if [ -n "$d" ] && [ "$d" != "/" ] && [ -r "$MGDL_ROOT/proc/interrupts" ]; then
+    for bus in "${d%/*}"/usb[0-9]*; do
+      irq="$(awk -v n="xhci-hcd:${bus##*/}" '$NF == n { sub(":", "", $1); print $1 }' \
+        "$MGDL_ROOT/proc/interrupts")"
+      [ -n "$irq" ] && irq_list="$irq_list $irq"
+    done
+  fi
+  if [ -z "$irq_list" ]; then
+    info "xHCI IRQ for $iface_name not found, affinity not checked"
+  fi
+  for irq in $irq_list; do
+    check_eq "xHCI IRQ $irq affinity" \
+      "$(read_sys "$MGDL_ROOT/proc/irq/$irq/smp_affinity_list")" "$TUNE_IRQ_CPU"
+  done
+else
+  fail "${iface_name:-IFACE_PREFIX+IFACE_NUM} present for tuning checks"
+fi
 # -- LPM quirk present -------------------------------------------------------
 quirks=""
 if [ -r "$MGDL_USBCORE_QUIRKS" ]; then

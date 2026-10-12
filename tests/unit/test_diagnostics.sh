@@ -208,6 +208,25 @@ esac
   assert_contains "$out" "FAIL route to 192.168.20.17 via macncm0"
 }
 
+# __tuned_net ROOT - builds a macncm0 bound to cdc_ncm under a fake xHCI with
+# root hubs usb3/usb4, with the throughput tuning from config/link.conf applied.
+__tuned_net() {
+  local root="$1" ctrl net="$1/sys/class/net/macncm0"
+  ctrl="$root/sys/devices/pci0000:00/0000:00:14.0"
+  mkdir -p "$ctrl/usb3" "$ctrl/usb4/4-1/4-1:1.0" "$root/sys/bus/usb/drivers/cdc_ncm"
+  ln -s "$root/sys/bus/usb/drivers/cdc_ncm" "$ctrl/usb4/4-1/4-1:1.0/driver"
+  mkdir -p "$net/cdc_ncm" "$net/queues/rx-0"
+  ln -s "$ctrl/usb4/4-1/4-1:1.0" "$net/device"
+  echo 8178 >"$net/mtu"
+  echo 10000 >"$net/tx_queue_len"
+  echo 32764 >"$net/cdc_ncm/rx_max"
+  echo 32764 >"$net/cdc_ncm/tx_max"
+  echo 000003c0 >"$net/queues/rx-0/rps_cpus"
+  mkdir -p "$root/proc/irq/33"
+  printf ' 33:  10  20  GICv3 108 Level  xhci-hcd:usb3\n' >"$root/proc/interrupts"
+  echo 5 >"$root/proc/irq/33/smp_affinity_list"
+}
+
 test_doctor_healthy() {
   local repo stub_dir root out rc=0
   repo="$(__repo_env)"
@@ -219,9 +238,7 @@ test_doctor_healthy() {
   printf '1905' >"$root/sys/bus/usb/devices/1-1/idProduct"
   printf '5000' >"$root/sys/bus/usb/devices/1-1/speed"
 
-  mkdir -p "$root/sys/bus/usb/drivers/cdc_ncm"
-  mkdir -p "$root/sys/class/net/macncm0/device"
-  ln -s "$root/sys/bus/usb/drivers/cdc_ncm" "$root/sys/class/net/macncm0/device/driver"
+  __tuned_net "$root"
 
   mkdir -p "$(dirname "$root/sys/module/usbcore/parameters/quirks")"
   printf '05ac:1905:k,05ac:1902:k' >"$root/sys/module/usbcore/parameters/quirks"
@@ -277,6 +294,28 @@ esac
   assert_contains "$out" "FAIL macncm0 has 192.168.20.20/24"
 }
 
+test_doctor_missing_tuning() {
+  local repo stub_dir root out rc=0
+  repo="$(__repo_env)"
+  stub_dir="$(mk_tmp)"
+  root="$(mk_tmp)"
+  __tuned_net "$root"
+  # Tuning lost, e.g. a replug before the udev rule was installed.
+  echo 1500 >"$root/sys/class/net/macncm0/mtu"
+  echo 0 >"$root/sys/class/net/macncm0/queues/rx-0/rps_cpus"
+  echo 0-19 >"$root/proc/irq/33/smp_affinity_list"
+  mk_stub "$stub_dir" lsusb 'echo "Bus 004 Device 002: ID 05ac:1905 Apple, Inc."'
+  mk_stub "$stub_dir" ip 'exit 1'
+  mk_stub "$stub_dir" dmesg 'exit 1'
+
+  out="$(PATH="$stub_dir:$PATH" MGDL_ROOT="$root" bash "$repo/scripts/doctor.sh")" || rc=$?
+  assert_eq "1" "$rc"
+  assert_contains "$out" "FAIL macncm0 mtu = 8178 (found 1500)"
+  assert_contains "$out" "FAIL macncm0 rps_cpus = 3c0 (found 0)"
+  assert_contains "$out" "FAIL xHCI IRQ 33 affinity = 5 (found 0-19)"
+  assert_contains "$out" "PASS macncm0 NTB rx_max = 32764"
+}
+
 test_doctor_lpm_quirk_checks_all_configured_pids() {
   local repo stub_dir root out rc=0
   repo="$(__repo_env)"
@@ -288,9 +327,7 @@ test_doctor_lpm_quirk_checks_all_configured_pids() {
   printf '1905' >"$root/sys/bus/usb/devices/1-1/idProduct"
   printf '5000' >"$root/sys/bus/usb/devices/1-1/speed"
 
-  mkdir -p "$root/sys/bus/usb/drivers/cdc_ncm"
-  mkdir -p "$root/sys/class/net/macncm0/device"
-  ln -s "$root/sys/bus/usb/drivers/cdc_ncm" "$root/sys/class/net/macncm0/device/driver"
+  __tuned_net "$root"
 
   # M8: config/pids.conf has both 1905 and 1902, but the usbcore quirks
   # mask only carries 1905 - the per-PID check must catch the missing 1902.
