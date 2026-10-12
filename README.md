@@ -88,6 +88,22 @@ packets are dropped and the link stops.
 
 Values live in `config/link.conf` and the script runs from udev each time
 the interface appears (`/usr/local/sbin/apple-ncm-tune`).
+
+## Future work
+
+- **The cable is not the limit.** The GX10 ports offer 20 Gbit/s (Gen 2x2),
+  but the Mac in USB device mode links at 10 Gbit/s (Gen 2x1) even with an
+  80 Gbit/s cable. Apple controllers do not support Gen 2x2.
+- **Second cable.** A second link (`macncm1`/`en4`) could carry about
+  12-15 Gbit/s in total across several flows. A single flow stays at one
+  link's speed. This needs multi-interface support in the installer and
+  config. Untested: whether a second Mac port also works in device mode.
+- **Small CPU-side gains (maybe 5-10 %), with trade-offs.** IOMMU
+  passthrough (needs a reboot and drops DMA isolation), and exempting this
+  interface from conntrack without breaking ufw.
+- **Different link.** The GX10 ConnectX-7 QSFP port to a Thunderbolt
+  25/40GbE adapter on the Mac could exceed 20 Gbit/s. Not researched yet.
+
 ## Safety boundaries
 
 - Read-only scripts (`doctor.sh`, `check-kernel-support.sh`, `verify.sh`)
