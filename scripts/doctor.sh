@@ -64,6 +64,17 @@ if [ "$other_pid_count" -eq 0 ]; then
   info "no non-phone Apple PID detected"
 fi
 
+# -- Loaded cdc_ncm is the DKMS build -----------------------------------------
+loaded_src="$(cat "$MGDL_ROOT/sys/module/cdc_ncm/srcversion" 2>/dev/null || true)"
+disk_src="$(modinfo -F srcversion cdc_ncm 2>/dev/null || true)"
+if [ -z "$loaded_src" ]; then
+  info "cdc_ncm not loaded"
+elif [ "$loaded_src" = "$disk_src" ]; then
+  pass "loaded cdc_ncm matches the installed module"
+else
+  fail "loaded cdc_ncm is stale (stock module from initramfs?) - rerun make install"
+fi
+
 # -- USB speed >= 5000M ------------------------------------------------------
 speed_found=""
 for vendor_file in "$MGDL_ROOT"/sys/bus/usb/devices/*/idVendor; do

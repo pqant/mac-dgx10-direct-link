@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `make install` now rebuilds the initramfs and reloads a stale in-memory
+  `cdc_ncm`, so a reboot no longer brings back the stock module and its
+  `bind() failure` loop. `make uninstall` rebuilds the initramfs too, and
+  `make doctor` flags a loaded module that differs from the installed one.
+
 ### Added
 
 - Repository scaffold: license, notice, changelog, Makefile, and the plain-bash

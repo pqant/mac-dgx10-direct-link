@@ -197,6 +197,36 @@ if [ "$quirk_rc" -ne 0 ] && [[ "$effective_module" != *updates/dkms* ]]; then
   fi
 fi
 
+# -- Step 5b: refresh initramfs, swap a stale in-memory cdc_ncm --------------
+# cdc_ncm is packed into the initramfs. Without a rebuild the next boot loads
+# the stock module from there and every Apple bind fails.
+if command -v update-initramfs >/dev/null 2>&1; then
+  for k in "${kernels[@]}"; do
+    [ -f "$MGDL_ROOT/boot/initrd.img-$k" ] || continue
+    [ -z "${skip_kernel[$k]:-}" ] || continue
+    if ! run_cmd update-initramfs -u -k "$k"; then
+      if [ "$k" = "$running_kver" ]; then
+        log_error "update-initramfs failed for running kernel $k"
+        exit 1
+      fi
+      log_warn "update-initramfs failed for $k"
+    fi
+  done
+fi
+loaded_src="$(cat "$MGDL_ROOT/sys/module/cdc_ncm/srcversion" 2>/dev/null || true)"
+disk_src="$(modinfo -F srcversion cdc_ncm 2>/dev/null || true)"
+if [ -n "$loaded_src" ] && [ -n "$disk_src" ] && [ "$loaded_src" != "$disk_src" ]; then
+  mods=(cdc_ncm)
+  [ -d "$MGDL_ROOT/sys/module/cdc_mbim" ] && mods=(cdc_mbim cdc_ncm)
+  if run_cmd modprobe -r "${mods[@]}"; then
+    run_cmd modprobe cdc_ncm
+    [ "${#mods[@]}" -eq 1 ] || run_cmd modprobe cdc_mbim || true
+    echo "reloaded cdc_ncm from updates/dkms"
+  else
+    log_warn "cdc_ncm is in use; reboot to load the DKMS module"
+  fi
+fi
+
 # -- Step 6: render templates, reload grub/udev/netplan ----------------------
 iface="${IFACE_PREFIX}${IFACE_NUM}"
 

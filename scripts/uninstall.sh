@@ -77,6 +77,10 @@ if [ "$purge" -eq 1 ]; then
 fi
 
 run_cmd depmod -a
+# Drop the DKMS cdc_ncm from every initramfs it was packed into.
+if command -v update-initramfs >/dev/null 2>&1; then
+  run_cmd update-initramfs -u -k all || log_warn "update-initramfs failed"
+fi
 run_cmd update-grub
 run_cmd udevadm control --reload
 run_cmd netplan generate

@@ -97,6 +97,9 @@ case "$*" in
   *"-F alias"*)
     printf "alias: usb:v05ACp1905d*dc*dsc*dp*ic*isc*ip*in00*\n"
     ;;
+  *"-F srcversion"*)
+    echo "NEWSRC"
+    ;;
   *"-n cdc_ncm"*)
     if [ -f "$MGDL_ROOT/etc/depmod.d/apple-ncm.conf" ]; then
       echo "/lib/modules/'"$kver"'/updates/dkms/cdc_ncm.ko"
@@ -107,6 +110,8 @@ case "$*" in
 esac
 '
   mk_stub "$dir" depmod 'echo "depmod $*" >>"$MGDL_ROOT/calls.log"'
+  mk_stub "$dir" update-initramfs 'echo "update-initramfs $*" >>"$MGDL_ROOT/calls.log"'
+  mk_stub "$dir" modprobe 'echo "modprobe $*" >>"$MGDL_ROOT/calls.log"'
   mk_stub "$dir" update-grub 'echo "update-grub $*" >>"$MGDL_ROOT/calls.log"'
   mk_stub "$dir" udevadm 'echo "udevadm $*" >>"$MGDL_ROOT/calls.log"'
   mk_stub "$dir" netplan 'echo "netplan $*" >>"$MGDL_ROOT/calls.log"'
@@ -193,6 +198,39 @@ test_install_renders_files() {
   assert_contains "$(cat "$root/.out")" "reboot required"
   assert_contains "$(cat "$root/etc/sysctl.d/60-apple-ncm.conf")" "net.core.netdev_max_backlog = 10000"
   assert_contains "$(cat "$root/calls.log")" "sysctl -q -p $root/etc/sysctl.d/60-apple-ncm.conf"
+}
+
+test_install_refreshes_initramfs_and_reloads_stale_module() {
+  local parts repo stub_dir root rc=0
+  parts="$(__good_env)"
+  repo="${parts%%|*}"
+  parts="${parts#*|}"
+  stub_dir="${parts%%|*}"
+  root="${parts#*|}"
+  mkdir -p "$root/boot" "$root/sys/module/cdc_ncm" "$root/sys/module/cdc_mbim"
+  : >"$root/boot/initrd.img-$kver"
+  echo "OLDSRC" >"$root/sys/module/cdc_ncm/srcversion"
+
+  __run_install "$repo" "$stub_dir" "$root" >"$root/.out" 2>&1 || rc=$?
+  assert_eq "0" "$rc" "$(cat "$root/.out")"
+  assert_contains "$(cat "$root/calls.log")" "update-initramfs -u -k $kver"
+  assert_contains "$(cat "$root/calls.log")" "modprobe -r cdc_mbim cdc_ncm"
+  assert_contains "$(cat "$root/calls.log")" "modprobe cdc_ncm"
+}
+
+test_install_keeps_current_module_loaded() {
+  local parts repo stub_dir root rc=0
+  parts="$(__good_env)"
+  repo="${parts%%|*}"
+  parts="${parts#*|}"
+  stub_dir="${parts%%|*}"
+  root="${parts#*|}"
+  mkdir -p "$root/sys/module/cdc_ncm"
+  echo "NEWSRC" >"$root/sys/module/cdc_ncm/srcversion"
+
+  __run_install "$repo" "$stub_dir" "$root" >"$root/.out" 2>&1 || rc=$?
+  assert_eq "0" "$rc" "$(cat "$root/.out")"
+  assert_not_contains "$(cat "$root/calls.log")" "modprobe"
 }
 
 test_install_quirk_active_applies_tuning_without_reboot() {
@@ -377,6 +415,7 @@ test_uninstall_removes_all() {
   assert_file_absent "$root/etc/sysctl.d/60-apple-ncm.conf"
   assert_file_absent "$root/usr/src/apple-cdc-ncm-1.0.0"
   assert_contains "$(cat "$root/calls.log")" "dkms remove apple-cdc-ncm/1.0.0 --all"
+  assert_contains "$(cat "$root/calls.log")" "update-initramfs -u -k all"
 }
 
 test_uninstall_dkms_remove_failure_warns_and_continues() {
